@@ -22,7 +22,7 @@ flowchart TB
     %% ─────────── ADVERSARY SIMULATION ───────────
     subgraph ADV["Adversary Simulation (offensive/)"]
         direction LR
-        MIRAGE["Mirage<br/>Honeypot"]
+        HONEYPOT["Honeypot"]
         SCANNER["Vulnerability<br/>Scanner"]
     end
 
@@ -39,8 +39,8 @@ flowchart TB
     end
 
     %% ─────────── ADVERSARY → INGESTION ───────────
-    SCANNER -.-> PFSENSE
-    MIRAGE  -.-> SPLUNK
+    SCANNER  -.-> PFSENSE
+    HONEYPOT -.-> SPLUNK
 
     %% ─────────── INGESTION → DETECTION ───────────
     ADSRV   --> SPLUNK
@@ -51,7 +51,7 @@ flowchart TB
     classDef ing fill:#1f2a3a,stroke:#36c,color:#fff;
     classDef det fill:#1f3a2a,stroke:#3a6,color:#fff;
 
-    class MIRAGE,SCANNER adv;
+    class HONEYPOT,SCANNER adv;
     class PFSENSE,ADSRV ing;
     class SPLUNK det;
 ```
@@ -76,16 +76,16 @@ flowchart TB
 |---|---|---|---|---|
 | 1 | [Windows Server + AD](../projects/defensive/windows_server_with_AD/) | [Splunk](../projects/defensive/splunk/) | Sysmon + Windows Security event logs via Universal Forwarder | implemented |
 | 2 | [pfSense](../projects/defensive/pfsense_firewall/) | [Splunk](../projects/defensive/splunk/) | Firewall + Suricata IDS alerts | illustrative |
-| 3 | [Mirage](../projects/offensive/honeypot/) | [Splunk](../projects/defensive/splunk/) | Honeypot session events (SSH/HTTP/FTP/Telnet) | illustrative |
+| 3 | [Honeypot](../projects/offensive/honeypot/) | [Splunk](../projects/defensive/splunk/) | Honeypot session events (SSH/HTTP/FTP/Telnet) | illustrative |
 | 4 | [Vulnerability Scanner](../projects/offensive/vulnerability_scanner/) | [pfSense](../projects/defensive/pfsense_firewall/) / Suricata | Port-scan and probe traffic the IDS should flag | illustrative |
 
 ---
 
 ## Layer-by-layer summary
 
-**Adversary Simulation** — Mirage and the vulnerability scanner double as test
-harnesses for the blue-team stack. Running a vulnerability scan, or leaving
-Mirage exposed, generates realistic recon and intrusion telemetry for the
+**Adversary Simulation** — the honeypot and the vulnerability scanner double as
+test harnesses for the blue-team stack. Running a vulnerability scan, or leaving
+the honeypot exposed, generates realistic recon and intrusion telemetry for the
 sensors to pick up.
 
 **Ingestion** — where raw signal enters. pfSense with Suricata sits at the
@@ -94,7 +94,7 @@ covers the endpoint and identity side.
 
 **Detection** — Splunk runs detection content against the forwarded Sysmon and
 Windows Security logs, with the perimeter (pfSense/Suricata) and honeypot
-(Mirage) sources as further inputs.
+sources as further inputs.
 
 ---
 
