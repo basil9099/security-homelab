@@ -1,0 +1,66 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Honeypot runtime artifacts
+*.jsonl
+.ssh_host_key
+
+# network_anomaly_ml runtime artifacts (models, demo output, synthetic CSVs)
+projects/defensive/network_anomaly_ml/data/*
+!projects/defensive/network_anomaly_ml/data/.gitkeep
+
+
+# malware_analysis - never commit binaries, samples, or triage reports
+projects/defensive/malware_analysis/samples/*
+!projects/defensive/malware_analysis/samples/README.md
+projects/defensive/malware_analysis/reports/
+projects/defensive/malware_analysis/demo/build/
+projects/defensive/malware_analysis/**/*.exe
+projects/defensive/malware_analysis/**/*.dll
+projects/defensive/malware_analysis/**/*.bin
+projects/defensive/malware_analysis/**/*.sys
+projects/defensive/malware_analysis/**/*.scr
+projects/defensive/malware_analysis/**/*.pml
+projects/defensive/malware_analysis/**/*.pcap
+projects/defensive/malware_analysis/**/*.pcapng
+projects/defensive/malware_analysis/**/*.evtx
+projects/defensive/malware_analysis/**/*.vmem
+
+# digital_forensics (WRAITH) — never commit acquired artifacts or generated reports
+projects/defensive/digital_forensics/reports/
+projects/defensive/digital_forensics/demo/build/
+projects/defensive/digital_forensics/samples/*
+!projects/defensive/digital_forensics/samples/README.md
+projects/defensive/digital_forensics/**/*.evtx
+projects/defensive/digital_forensics/**/*.vmem
+projects/defensive/digital_forensics/**/*.raw
+projects/defensive/digital_forensics/**/*.lime
+projects/defensive/digital_forensics/**/*.dd
+projects/defensive/digital_forensics/**/*.E01
+projects/defensive/digital_forensics/**/*.plaso
