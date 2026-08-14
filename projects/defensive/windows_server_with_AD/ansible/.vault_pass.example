@@ -1,0 +1,3 @@
+# Copy this file to .vault_pass, put your vault password inside it (single line, no trailing newline),
+# and reference it via ANSIBLE_VAULT_PASSWORD_FILE or ansible-playbook --vault-password-file=.vault_pass.
+# .vault_pass is git-ignored.

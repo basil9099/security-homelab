@@ -1,0 +1,22 @@
+---
+# Organisational Units. Parents must appear before children.
+
+ad_ous:
+  - name: HQ
+    path: "DC=homelab,DC=local"
+    description: Head Office container
+  - name: Users
+    path: "OU=HQ,DC=homelab,DC=local"
+    description: All human identities under HQ
+  - name: Computers
+    path: "OU=HQ,DC=homelab,DC=local"
+    description: Domain-joined workstations and servers under HQ
+  - name: IT
+    path: "OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: IT / Helpdesk staff
+  - name: HR
+    path: "OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: Human Resources staff
+  - name: Finance
+    path: "OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: Finance team

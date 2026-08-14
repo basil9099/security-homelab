@@ -1,0 +1,81 @@
+---
+# GPO creation and linking is done via native PowerShell cmdlets — there's no first-party
+# Ansible module for New-GPO / Set-GPRegistryValue. Each task is written to be idempotent.
+
+- name: Apply Default Domain password policy
+  ansible.windows.win_shell: |
+    Set-ADDefaultDomainPasswordPolicy `
+      -Identity {{ domain_name }} `
+      -ComplexityEnabled ${{ (item.domain_password_policy.complexity_enabled | bool) | string }} `
+      -MinPasswordLength {{ item.domain_password_policy.min_password_length }} `
+      -PasswordHistoryCount {{ item.domain_password_policy.password_history_count }} `
+      -MaxPasswordAge {{ item.domain_password_policy.max_password_age_days }}.00:00:00 `
+      -MinPasswordAge {{ item.domain_password_policy.min_password_age_days }}.00:00:00 `
+      -ReversibleEncryptionEnabled ${{ (item.domain_password_policy.reversible_encryption_enabled | bool) | string }} `
+      -LockoutThreshold {{ item.domain_password_policy.lockout_threshold }} `
+      -LockoutDuration 00:{{ '%02d' | format(item.domain_password_policy.lockout_duration_minutes) }}:00 `
+      -LockoutObservationWindow 00:{{ '%02d' | format(item.domain_password_policy.lockout_observation_window_minutes) }}:00
+  loop: "{{ ad_gpos }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.domain_password_policy is defined
+  changed_when: false
+
+- name: Ensure GPO exists
+  ansible.windows.win_shell: |
+    Import-Module GroupPolicy
+    $gpo = Get-GPO -Name "{{ item.name }}" -ErrorAction SilentlyContinue
+    if (-not $gpo) {
+      New-GPO -Name "{{ item.name }}" -Comment "{{ item.description | default('') }}" | Out-Null
+      Write-Output "created"
+    } else {
+      Write-Output "exists"
+    }
+  loop: "{{ ad_gpos }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: gpo_create
+  changed_when: "'created' in gpo_create.stdout"
+
+- name: Link GPOs to their scope
+  ansible.windows.win_shell: |
+    Import-Module GroupPolicy
+    $existing = (Get-GPInheritance -Target "{{ item.link_path }}").GpoLinks | Where-Object {$_.DisplayName -eq "{{ item.name }}"}
+    if (-not $existing) {
+      New-GPLink -Name "{{ item.name }}" -Target "{{ item.link_path }}" -LinkEnabled Yes | Out-Null
+      Write-Output "linked"
+    } else {
+      Write-Output "already-linked"
+    }
+  loop: "{{ ad_gpos }}"
+  loop_control:
+    label: "{{ item.name }} -> {{ item.link_path }}"
+  register: gpo_link
+  changed_when: "'linked' == gpo_link.stdout | trim"
+
+- name: Apply registry-based GPO settings
+  ansible.windows.win_shell: |
+    Import-Module GroupPolicy
+    Set-GPRegistryValue -Name "{{ item.0.name }}" `
+      -Key "{{ item.1.path }}" `
+      -ValueName "{{ item.1.name }}" `
+      -Type {{ item.1.type | capitalize }} `
+      -Value "{{ item.1.value }}" | Out-Null
+  loop: "{{ ad_gpos | subelements('registry_settings', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.0.name }} -> {{ item.1.name }}"
+  changed_when: false
+
+- name: Apply advanced audit policy subcategories
+  ansible.windows.win_shell: >-
+    AuditPol.exe /set /subcategory:"{{ item.1.subcategory }}"
+    /success:{{ 'enable' if item.1.success else 'disable' }}
+    /failure:{{ 'enable' if item.1.failure else 'disable' }}
+  loop: "{{ ad_gpos | subelements('advanced_audit_policy', skip_missing=True) }}"
+  loop_control:
+    label: "{{ item.1.subcategory }}"
+  changed_when: false
+
+- name: Force Group Policy update on the DC
+  ansible.windows.win_shell: gpupdate /force
+  changed_when: false

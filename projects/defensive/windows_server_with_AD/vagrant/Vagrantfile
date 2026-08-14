@@ -1,0 +1,94 @@
+# Vagrantfile — Windows AD homelab
+#
+# Boots two VMs on a host-only network that mirrors the pfSense LAN (10.10.10.0/24):
+#   - dc01    (10.10.10.10)  Windows Server 2022, promoted to DC for homelab.local
+#   - wkstn01 (10.10.10.20)  Windows 10/11 client, domain-joined
+#
+# Provider preference (set with `VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant up` etc.):
+#   - vmware_desktop  — matches the hypervisor used elsewhere in this homelab (paid plugin)
+#   - virtualbox      — free fallback; slower on Windows 11 hosts that have Hyper-V enabled
+#
+# Provisioning is handled by Ansible from the ../ansible tree.
+
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = false
+
+  # ----- DC01 -----
+  config.vm.define "dc01" do |dc|
+    dc.vm.box = "StefanScherer/windows_2022"
+    dc.vm.hostname = "dc01"
+    dc.vm.communicator = "winrm"
+    dc.winrm.username = "vagrant"
+    dc.winrm.password = "vagrant"
+    dc.winrm.transport = :negotiate
+    dc.vm.boot_timeout = 900
+    dc.vm.network "private_network", ip: "10.10.10.10", netmask: "255.255.255.0"
+
+    dc.vm.provider :vmware_desktop do |v|
+      v.vmx["memsize"]  = "4096"
+      v.vmx["numvcpus"] = "2"
+      v.gui = false
+      v.linked_clone = true
+    end
+
+    dc.vm.provider :virtualbox do |v|
+      v.memory = 4096
+      v.cpus   = 2
+      v.gui    = false
+      v.linked_clone = true
+      v.customize ["modifyvm", :id, "--nested-hw-virt", "on"]
+    end
+
+    dc.vm.provision "ansible" do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.config_file        = "../ansible/ansible.cfg"
+      ansible.inventory_path     = "../ansible/inventory.yml"
+      ansible.playbook           = "../ansible/playbooks/dc_promote.yml"
+      ansible.limit              = "dc01"
+      ansible.galaxy_role_file   = "../ansible/requirements.yml"
+      ansible.galaxy_command     = "ansible-galaxy collection install -r %{role_file} -p ../ansible/.collections"
+    end
+
+    dc.vm.provision "ansible" do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.config_file        = "../ansible/ansible.cfg"
+      ansible.inventory_path     = "../ansible/inventory.yml"
+      ansible.playbook           = "../ansible/playbooks/ad_baseline.yml"
+      ansible.limit              = "dc01"
+    end
+  end
+
+  # ----- WKSTN01 -----
+  config.vm.define "wkstn01" do |ws|
+    ws.vm.box = "StefanScherer/windows_10"
+    ws.vm.hostname = "wkstn01"
+    ws.vm.communicator = "winrm"
+    ws.winrm.username = "vagrant"
+    ws.winrm.password = "vagrant"
+    ws.winrm.transport = :negotiate
+    ws.vm.boot_timeout = 900
+    ws.vm.network "private_network", ip: "10.10.10.20", netmask: "255.255.255.0"
+
+    ws.vm.provider :vmware_desktop do |v|
+      v.vmx["memsize"]  = "4096"
+      v.vmx["numvcpus"] = "2"
+      v.gui = true
+      v.linked_clone = true
+    end
+
+    ws.vm.provider :virtualbox do |v|
+      v.memory = 4096
+      v.cpus   = 2
+      v.gui    = true
+      v.linked_clone = true
+    end
+
+    ws.vm.provision "ansible" do |ansible|
+      ansible.compatibility_mode = "2.0"
+      ansible.config_file        = "../ansible/ansible.cfg"
+      ansible.inventory_path     = "../ansible/inventory.yml"
+      ansible.playbook           = "../ansible/playbooks/client_join.yml"
+      ansible.limit              = "wkstn01"
+    end
+  end
+end

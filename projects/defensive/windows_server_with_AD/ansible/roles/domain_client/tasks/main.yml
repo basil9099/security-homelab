@@ -1,0 +1,25 @@
+---
+- name: Point client DNS at the DC
+  ansible.windows.win_dns_client:
+    adapter_names: "*"
+    dns_servers:
+      - "{{ dc_ip_address }}"
+
+- name: Wait for DC DNS to resolve
+  ansible.windows.win_shell: |
+    Resolve-DnsName -Name {{ domain_name }} -Type A -ErrorAction Stop | Out-Null
+  register: dns_check
+  retries: 10
+  delay: 6
+  until: dns_check is succeeded
+  changed_when: false
+
+- name: Join workstation to the domain
+  microsoft.ad.membership:
+    dns_domain_name: "{{ domain_name }}"
+    hostname: "{{ inventory_hostname | upper }}"
+    domain_admin_user: "{{ domain_admin_user }}"
+    domain_admin_password: "{{ vault_domain_admin_password }}"
+    domain_ou_path: "OU=Computers,OU=HQ,DC=homelab,DC=local"
+    state: domain
+    reboot: true

@@ -1,0 +1,24 @@
+---
+# Security groups. Group membership is resolved via users.yml.
+
+ad_groups:
+  - name: IT-Helpdesk
+    scope: global
+    category: security
+    ou_path: "OU=IT,OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: Tier-1 support staff
+  - name: HR-Staff
+    scope: global
+    category: security
+    ou_path: "OU=HR,OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: HR team members
+  - name: Finance-Staff
+    scope: global
+    category: security
+    ou_path: "OU=Finance,OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: Finance team members
+  - name: Finance-Managers
+    scope: global
+    category: security
+    ou_path: "OU=Finance,OU=Users,OU=HQ,DC=homelab,DC=local"
+    description: Finance leadership with elevated rights

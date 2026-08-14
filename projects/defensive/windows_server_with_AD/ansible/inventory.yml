@@ -1,0 +1,11 @@
+---
+all:
+  children:
+    domain_controllers:
+      hosts:
+        dc01:
+          ansible_host: 10.10.10.10
+    domain_clients:
+      hosts:
+        wkstn01:
+          ansible_host: 10.10.10.20

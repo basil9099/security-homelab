@@ -1,0 +1,32 @@
+---
+- name: Set hostname
+  ansible.windows.win_hostname:
+    name: "{{ inventory_hostname | upper }}"
+  register: hostname_change
+
+- name: Set timezone to UTC
+  community.windows.win_timezone:
+    timezone: "UTC"
+
+- name: Ensure WinRM firewall rule is enabled
+  ansible.windows.win_firewall_rule:
+    name: "Windows Remote Management (HTTPS-In)"
+    enabled: true
+    state: present
+
+- name: Configure static IPv4 on primary interface (domain_controllers only)
+  ansible.windows.win_shell: |
+    $adapter = Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object -First 1
+    if ($adapter) {
+      New-NetIPAddress -InterfaceIndex $adapter.ifIndex `
+                       -IPAddress {{ dc_ip_address }} `
+                       -PrefixLength {{ dc_subnet_prefix }} `
+                       -DefaultGateway {{ dc_gateway }} -ErrorAction SilentlyContinue
+      Set-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -ServerAddresses ({{ dns_servers | map('regex_replace', '^(.*)$', '"\\1"') | join(',') }})
+    }
+  when: computer_role == 'domain_controller'
+  changed_when: false
+
+- name: Reboot if hostname changed
+  ansible.windows.win_reboot:
+  when: hostname_change.reboot_required | default(false)

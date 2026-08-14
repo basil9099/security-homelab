@@ -1,0 +1,69 @@
+---
+# Source of truth for AD user accounts.
+# Mirrors the user table in README.md — edit here, regenerate the table there.
+
+ad_users:
+  - sam_account_name: alice.it
+    upn: alice.it@homelab.local
+    first_name: Alice
+    last_name: Smith
+    display_name: Alice Smith
+    description: Helpdesk Analyst
+    office: HQ-102
+    phone: "+1 (555) 0102"
+    email: alice.it@homelab.local
+    ou_path: "OU=IT,OU=Users,OU=HQ,DC=homelab,DC=local"
+    groups:
+      - IT-Helpdesk
+      - Domain Users
+    initial_password: "{{ vault_user_initial_password }}"
+    change_password_next_logon: true
+
+  - sam_account_name: bob.hr
+    upn: bob.hr@homelab.local
+    first_name: Bob
+    last_name: Johnson
+    display_name: Bob Johnson
+    description: HR Assistant
+    office: HQ-201
+    phone: "+1 (555) 0103"
+    email: bob.hr@homelab.local
+    ou_path: "OU=HR,OU=Users,OU=HQ,DC=homelab,DC=local"
+    groups:
+      - HR-Staff
+      - Domain Users
+    initial_password: "{{ vault_user_initial_password }}"
+    change_password_next_logon: true
+
+  - sam_account_name: carol.finance
+    upn: carol.finance@homelab.local
+    first_name: Carol
+    last_name: Bright
+    display_name: Carol Bright
+    description: Financial Analyst
+    office: HQ-301
+    phone: "+1 (555) 0104"
+    email: carol.finance@homelab.local
+    ou_path: "OU=Finance,OU=Users,OU=HQ,DC=homelab,DC=local"
+    groups:
+      - Finance-Staff
+      - Domain Users
+    initial_password: "{{ vault_user_initial_password }}"
+    change_password_next_logon: true
+
+  - sam_account_name: david.bright
+    upn: david.bright@homelab.local
+    first_name: David
+    last_name: Bright
+    display_name: David Bright
+    description: Finance Manager
+    office: HQ-302
+    phone: "+1 (555) 0105"
+    email: david.bright@homelab.local
+    ou_path: "OU=Finance,OU=Users,OU=HQ,DC=homelab,DC=local"
+    groups:
+      - Finance-Staff
+      - Finance-Managers
+      - Domain Users
+    initial_password: "{{ vault_user_initial_password }}"
+    change_password_next_logon: true

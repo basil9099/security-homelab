@@ -1,0 +1,61 @@
+---
+- name: Ensure OUs exist (parents first)
+  microsoft.ad.ou:
+    name: "{{ item.name }}"
+    path: "{{ item.path }}"
+    description: "{{ item.description | default(omit) }}"
+    state: present
+  loop: "{{ ad_ous }}"
+  loop_control:
+    label: "{{ item.name }} @ {{ item.path }}"
+
+- name: Ensure security groups exist
+  microsoft.ad.group:
+    name: "{{ item.name }}"
+    scope: "{{ item.scope }}"
+    category: "{{ item.category }}"
+    path: "{{ item.ou_path }}"
+    description: "{{ item.description | default(omit) }}"
+    state: present
+  loop: "{{ ad_groups }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Ensure AD users exist
+  microsoft.ad.user:
+    name: "{{ item.sam_account_name }}"
+    sam_account_name: "{{ item.sam_account_name }}"
+    upn: "{{ item.upn }}"
+    firstname: "{{ item.first_name }}"
+    surname: "{{ item.last_name }}"
+    display_name: "{{ item.display_name }}"
+    description: "{{ item.description | default(omit) }}"
+    office: "{{ item.office | default(omit) }}"
+    email: "{{ item.email | default(omit) }}"
+    password: "{{ item.initial_password }}"
+    password_never_expires: false
+    user_cannot_change_password: false
+    enabled: true
+    path: "{{ item.ou_path }}"
+    state: present
+    attributes:
+      set:
+        telephoneNumber: "{{ item.phone | default('') }}"
+  loop: "{{ ad_users }}"
+  loop_control:
+    label: "{{ item.sam_account_name }}"
+  no_log: true
+
+- name: Ensure users are members of their groups
+  microsoft.ad.group:
+    name: "{{ group_name }}"
+    members:
+      add:
+        - "{{ user.sam_account_name }}"
+    state: present
+  loop: "{{ ad_users | subelements('groups') }}"
+  loop_control:
+    label: "{{ item.0.sam_account_name }} -> {{ item.1 }}"
+  vars:
+    user: "{{ item.0 }}"
+    group_name: "{{ item.1 }}"

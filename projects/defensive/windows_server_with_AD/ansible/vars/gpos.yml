@@ -1,0 +1,62 @@
+---
+# GPO baseline. Policies are applied via the ad_gpos role using Install-WindowsFeature GPMC
+# and PowerShell Group-Policy cmdlets — individual setting changes are expressed as registry
+# values (preferred, idempotent) rather than loading ADMX templates.
+
+ad_gpos:
+  - name: "Homelab - Password Policy"
+    link_path: "DC=homelab,DC=local"
+    description: Enforces strong password complexity and history at the domain root.
+    registry_settings: []
+    domain_password_policy:
+      complexity_enabled: true
+      min_password_length: 14
+      password_history_count: 24
+      max_password_age_days: 60
+      min_password_age_days: 1
+      reversible_encryption_enabled: false
+      lockout_threshold: 5
+      lockout_duration_minutes: 15
+      lockout_observation_window_minutes: 15
+
+  - name: "Homelab - Login Restrictions"
+    link_path: "OU=HQ,DC=homelab,DC=local"
+    description: Restricts interactive logon and screen-lock idle timeout.
+    registry_settings:
+      - path: "HKLM:\\Software\\Policies\\Microsoft\\Windows\\Personalization"
+        name: NoLockScreen
+        type: dword
+        value: 0
+      - path: "HKCU:\\Control Panel\\Desktop"
+        name: ScreenSaveTimeOut
+        type: string
+        value: "600"
+      - path: "HKCU:\\Control Panel\\Desktop"
+        name: ScreenSaverIsSecure
+        type: string
+        value: "1"
+
+  - name: "Homelab - Audit Policy"
+    link_path: "DC=homelab,DC=local"
+    description: Enables detailed audit logging for SOC detection engineering.
+    registry_settings:
+      - path: "HKLM:\\System\\CurrentControlSet\\Control\\Lsa"
+        name: SCENoApplyLegacyAuditPolicy
+        type: dword
+        value: 1
+    advanced_audit_policy:
+      - subcategory: "Logon"
+        success: true
+        failure: true
+      - subcategory: "Logoff"
+        success: true
+        failure: false
+      - subcategory: "Account Lockout"
+        success: true
+        failure: true
+      - subcategory: "Process Creation"
+        success: true
+        failure: false
+      - subcategory: "Kerberos Service Ticket Operations"
+        success: true
+        failure: true
