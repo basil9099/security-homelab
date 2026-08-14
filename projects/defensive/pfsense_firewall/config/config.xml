@@ -1,0 +1,177 @@
+<?xml version="1.0"?>
+<!--
+  Sanitised pfSense config template for the homelab.
+  This file is the source of truth for the initial restore. Ansible handles day-2 drift.
+
+  Fields marked <REDACTED-*> MUST be re-populated locally before restore — see REDACTIONS.md.
+  Do NOT commit a config.xml that contains real password hashes, certificates, or PPPoE creds.
+-->
+<pfsense>
+  <version>22.9</version>
+  <lastchange></lastchange>
+  <theme>pfSense</theme>
+  <sysctl/>
+  <system>
+    <optimization>normal</optimization>
+    <hostname>pfsense</hostname>
+    <domain>lab.local</domain>
+    <dnsserver>1.1.1.1</dnsserver>
+    <dnsserver>9.9.9.9</dnsserver>
+    <dnsallowoverride>no</dnsallowoverride>
+    <timezone>UTC</timezone>
+    <timeservers>pool.ntp.org</timeservers>
+    <webgui>
+      <protocol>https</protocol>
+      <port>443</port>
+      <ssl-certref>REDACTED-CERT-REF</ssl-certref>
+      <loginautocomplete/>
+    </webgui>
+    <disablenatreflection>yes</disablenatreflection>
+    <user>
+      <name>admin</name>
+      <descr>System Administrator</descr>
+      <scope>system</scope>
+      <groupname>admins</groupname>
+      <bcrypt-hash>REDACTED-ADMIN-HASH</bcrypt-hash>
+      <uid>0</uid>
+      <priv>user-shell-access</priv>
+    </user>
+    <group>
+      <name>admins</name>
+      <description>System Administrators</description>
+      <scope>system</scope>
+      <gid>1999</gid>
+      <member>0</member>
+      <priv>page-all</priv>
+    </group>
+    <nextuid>2000</nextuid>
+    <nextgid>2000</nextgid>
+    <ssh>
+      <enable>enabled</enable>
+      <sshdkeyonly>enabled</sshdkeyonly>
+    </ssh>
+  </system>
+  <interfaces>
+    <wan>
+      <enable/>
+      <if>vmx0</if>
+      <descr>WAN</descr>
+      <ipaddr>dhcp</ipaddr>
+      <subnet/>
+      <gateway/>
+      <blockpriv>on</blockpriv>
+      <blockbogons>on</blockbogons>
+    </wan>
+    <lan>
+      <enable/>
+      <if>vmx1</if>
+      <descr>LAN</descr>
+      <ipaddr>10.10.10.1</ipaddr>
+      <subnet>24</subnet>
+      <gateway/>
+    </lan>
+    <opt1>
+      <enable/>
+      <if>vmx2</if>
+      <descr>MGMT</descr>
+      <ipaddr>10.10.20.1</ipaddr>
+      <subnet>24</subnet>
+    </opt1>
+  </interfaces>
+  <dhcpd>
+    <lan>
+      <enable/>
+      <range>
+        <from>10.10.10.100</from>
+        <to>10.10.10.200</to>
+      </range>
+      <dnsserver>10.10.10.10</dnsserver>
+      <dnsserver>1.1.1.1</dnsserver>
+      <gateway>10.10.10.1</gateway>
+      <domain>lab.local</domain>
+      <staticmap>
+        <mac>REDACTED-DC01-MAC</mac>
+        <ipaddr>10.10.10.10</ipaddr>
+        <hostname>dc01</hostname>
+        <descr>Domain Controller</descr>
+      </staticmap>
+      <staticmap>
+        <mac>REDACTED-WKSTN01-MAC</mac>
+        <ipaddr>10.10.10.20</ipaddr>
+        <hostname>wkstn01</hostname>
+        <descr>Domain-joined workstation</descr>
+      </staticmap>
+    </lan>
+    <opt1>
+      <enable/>
+      <range>
+        <from>10.10.20.100</from>
+        <to>10.10.20.150</to>
+      </range>
+      <gateway>10.10.20.1</gateway>
+      <domain>mgmt.lab.local</domain>
+    </opt1>
+  </dhcpd>
+  <unbound>
+    <enable/>
+    <active_interface>lan,opt1</active_interface>
+    <outgoing_interface>wan</outgoing_interface>
+    <system_domain_local_zone_type>transparent</system_domain_local_zone_type>
+    <forwarding>1</forwarding>
+  </unbound>
+  <filter>
+    <rule>
+      <type>pass</type>
+      <interface>lan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>Default allow LAN to any</descr>
+      <source><network>lan</network></source>
+      <destination><any/></destination>
+    </rule>
+    <rule>
+      <type>block</type>
+      <interface>lan</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>Block LAN -> MGMT</descr>
+      <source><network>lan</network></source>
+      <destination><network>opt1</network></destination>
+    </rule>
+    <rule>
+      <type>pass</type>
+      <interface>opt1</interface>
+      <ipprotocol>inet</ipprotocol>
+      <descr>MGMT full outbound</descr>
+      <source><network>opt1</network></source>
+      <destination><any/></destination>
+    </rule>
+  </filter>
+  <nat>
+    <outbound><mode>automatic</mode></outbound>
+  </nat>
+  <cert>
+    <refid>REDACTED-CERT-REF</refid>
+    <descr>webConfigurator self-signed</descr>
+    <type>server</type>
+    <crt>REDACTED-CERT-BODY</crt>
+    <prv>REDACTED-PRIVATE-KEY</prv>
+  </cert>
+  <installedpackages>
+    <package>
+      <name>pfBlockerNG-devel</name>
+      <descr>IP + DNSBL block lists</descr>
+    </package>
+    <package>
+      <name>Suricata</name>
+      <descr>IDS on WAN + LAN</descr>
+    </package>
+    <package>
+      <name>ntopng</name>
+      <descr>Flow analysis</descr>
+    </package>
+  </installedpackages>
+  <syslog>
+    <enable/>
+    <logall/>
+    <remoteserver>10.10.10.10:5140</remoteserver>
+  </syslog>
+</pfsense>

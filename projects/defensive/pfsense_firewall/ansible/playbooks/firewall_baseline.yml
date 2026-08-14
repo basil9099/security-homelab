@@ -1,0 +1,33 @@
+---
+- name: Apply aliases + filter rules
+  hosts: pfsense
+  gather_facts: false
+  vars_files:
+    - ../vars/aliases.yml
+    - ../vars/rules.yml
+  tasks:
+    - name: Ensure aliases exist
+      pfsensible.core.pfsense_alias:
+        name: "{{ item.name }}"
+        type: "{{ item.type }}"
+        address: "{{ item.address | join(' ') }}"
+        descr: "{{ item.descr }}"
+        state: present
+      loop: "{{ pfsense_aliases }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Ensure filter rules exist in declared order
+      pfsensible.core.pfsense_rule:
+        name: "{{ item.name }}"
+        interface: "{{ item.interface }}"
+        action: "{{ item.action }}"
+        protocol: "{{ item.protocol }}"
+        source: "{{ item.source }}"
+        destination: "{{ item.destination }}"
+        destination_port: "{{ item.destination_port | default(omit) }}"
+        descr: "{{ item.descr }}"
+        state: present
+      loop: "{{ pfsense_rules }}"
+      loop_control:
+        label: "[{{ item.interface }}] {{ item.name }}"

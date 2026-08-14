@@ -1,0 +1,25 @@
+---
+- name: Install and configure firewall packages
+  hosts: pfsense
+  gather_facts: false
+  vars_files:
+    - ../vars/packages.yml
+  tasks:
+    - name: Ensure packages are installed
+      pfsensible.core.pfsense_package:
+        name: "{{ item.name }}"
+        state: present
+      loop: "{{ pfsense_packages }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Configure Suricata per-interface
+      pfsensible.core.pfsense_suricata_interface:
+        interface: "{{ item.interface }}"
+        block_offenders: "{{ item.block_offenders }}"
+        block_drops_only: "{{ item.block_drops_only | default(false) }}"
+        rule_categories: "{{ item.rule_categories }}"
+        state: present
+      loop: "{{ suricata_interfaces }}"
+      loop_control:
+        label: "{{ item.interface }}"

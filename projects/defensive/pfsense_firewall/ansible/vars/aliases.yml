@@ -1,0 +1,43 @@
+---
+# Firewall aliases — reusable address/network groups referenced from rules.yml.
+
+pfsense_aliases:
+  - name: lab_servers
+    type: host
+    address:
+      - "{{ dc_ip }}"
+    descr: Homelab servers (DC01)
+  - name: lab_workstations
+    type: host
+    address:
+      - "{{ wkstn_ip }}"
+    descr: Homelab workstations (WKSTN01)
+  - name: rfc1918
+    type: network
+    address:
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 192.168.0.0/16
+    descr: All private ranges (used in anti-lockout + default-deny rules)
+  - name: ad_tcp_ports
+    type: port
+    address:
+      - 53
+      - 88
+      - 135
+      - 389
+      - 445
+      - 464
+      - 636
+      - 3268
+      - 3269
+    descr: Active Directory TCP ports (Kerberos, LDAP, SMB, GC)
+  - name: ad_udp_ports
+    type: port
+    address:
+      - 53
+      - 88
+      - 123
+      - 389
+      - 464
+    descr: Active Directory UDP ports

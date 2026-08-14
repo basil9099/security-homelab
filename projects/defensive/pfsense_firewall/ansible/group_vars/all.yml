@@ -1,0 +1,11 @@
+---
+# Network layout (mirrors config/config.xml and the Windows AD lab).
+
+lan_subnet: 10.10.10.0/24
+lan_gateway: 10.10.10.1
+mgmt_subnet: 10.10.20.0/24
+mgmt_gateway: 10.10.20.1
+
+dc_ip: 10.10.10.10
+wkstn_ip: 10.10.10.20
+syslog_target: 10.10.10.10

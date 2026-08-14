@@ -1,0 +1,27 @@
+---
+# Installed packages. pfBlockerNG + Suricata + ntopng together give the
+# defence-in-depth stack referenced by the detection-engineering projects.
+
+pfsense_packages:
+  - name: pfBlockerNG-devel
+    descr: IP + DNSBL blocklists, GeoIP filtering
+  - name: suricata
+    descr: IDS/IPS on WAN and LAN
+  - name: ntopng
+    descr: Flow-level visibility + historical traffic analysis
+
+# Suricata interface configuration. Rules download pulls ET Open by default.
+suricata_interfaces:
+  - interface: wan
+    block_offenders: true
+    block_drops_only: false
+    rule_categories:
+      - emerging-exploit.rules
+      - emerging-malware.rules
+      - emerging-trojan.rules
+  - interface: lan
+    block_offenders: false           # alert-only on LAN so detection engineering can practise
+    rule_categories:
+      - emerging-exploit.rules
+      - emerging-malware.rules
+      - emerging-user_agents.rules

@@ -1,0 +1,32 @@
+---
+- name: Apply DHCP scopes and static mappings
+  hosts: pfsense
+  gather_facts: false
+  vars_files:
+    - ../vars/dhcp.yml
+  tasks:
+    - name: Ensure DHCP scopes are configured
+      pfsensible.core.pfsense_dhcp:
+        interface: "{{ item.interface }}"
+        range_from: "{{ item.range_from }}"
+        range_to: "{{ item.range_to }}"
+        gateway: "{{ item.gateway }}"
+        domain: "{{ item.domain }}"
+        dns_servers: "{{ item.dns_servers }}"
+        enable: true
+      loop: "{{ pfsense_dhcp_scopes }}"
+      loop_control:
+        label: "{{ item.interface }} {{ item.range_from }}-{{ item.range_to }}"
+
+    - name: Ensure static DHCP mappings
+      pfsensible.core.pfsense_dhcp_static:
+        interface: "{{ item.interface }}"
+        mac: "{{ item.mac }}"
+        ipaddr: "{{ item.ip }}"
+        hostname: "{{ item.hostname }}"
+        descr: "{{ item.descr }}"
+        state: present
+      loop: "{{ pfsense_dhcp_static_maps }}"
+      loop_control:
+        label: "{{ item.hostname }} ({{ item.ip }})"
+      when: not item.mac.startswith('REDACTED')

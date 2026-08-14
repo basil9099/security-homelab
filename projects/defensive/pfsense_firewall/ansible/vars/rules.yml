@@ -1,0 +1,76 @@
+---
+# Firewall rules — ordered, top-matching. Blue-team-first baseline:
+#   * LAN is the everyday subnet (workstations + servers)
+#   * MGMT is a tighter subnet (pfSense WebGUI, Splunk indexer, any admin workstation)
+#   * LAN → MGMT is blocked by default (admin jumps from MGMT → LAN, not the other way)
+
+pfsense_rules:
+  # ----- LAN -----
+  - name: Anti-lockout (allow LAN -> LAN address)
+    interface: lan
+    action: pass
+    protocol: tcp
+    source: any
+    destination: (self)
+    destination_port: 443
+    descr: Don't lock yourself out of the WebGUI from LAN
+
+  - name: Allow AD traffic LAN -> DC
+    interface: lan
+    action: pass
+    protocol: tcp
+    source: LAN net
+    destination: "{{ dc_ip }}"
+    destination_port: ad_tcp_ports
+    descr: Workstations -> DC (Kerberos, LDAP, SMB, GC)
+
+  - name: Allow AD UDP LAN -> DC
+    interface: lan
+    action: pass
+    protocol: udp
+    source: LAN net
+    destination: "{{ dc_ip }}"
+    destination_port: ad_udp_ports
+    descr: Workstations -> DC (Kerberos UDP, NTP, DNS)
+
+  - name: Block LAN -> MGMT
+    interface: lan
+    action: block
+    protocol: any
+    source: LAN net
+    destination: OPT1 net
+    descr: Segment admin network from user network
+
+  - name: Default allow LAN outbound
+    interface: lan
+    action: pass
+    protocol: any
+    source: LAN net
+    destination: any
+    descr: Catch-all LAN egress (tighten later)
+
+  # ----- MGMT -----
+  - name: Allow MGMT -> LAN for administration
+    interface: opt1
+    action: pass
+    protocol: any
+    source: OPT1 net
+    destination: LAN net
+    descr: Admin jump from MGMT into LAN
+
+  - name: Allow MGMT outbound
+    interface: opt1
+    action: pass
+    protocol: any
+    source: OPT1 net
+    destination: any
+    descr: MGMT egress
+
+  # ----- WAN -----
+  - name: Block RFC1918 on WAN ingress (defence-in-depth with blockpriv)
+    interface: wan
+    action: block
+    protocol: any
+    source: rfc1918
+    destination: any
+    descr: Spoofed private-source packets from the internet should never hit the firewall

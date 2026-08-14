@@ -1,0 +1,7 @@
+---
+- name: End-to-end pfSense convergence
+  import_playbook: firewall_baseline.yml
+
+- import_playbook: dhcp_dns.yml
+
+- import_playbook: ids_packages.yml

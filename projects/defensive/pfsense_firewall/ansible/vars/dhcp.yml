@@ -1,0 +1,33 @@
+---
+# DHCP scopes and static mappings. Matches config/config.xml but is the day-2 source of truth.
+
+pfsense_dhcp_scopes:
+  - interface: lan
+    range_from: 10.10.10.100
+    range_to: 10.10.10.200
+    gateway: 10.10.10.1
+    domain: lab.local
+    dns_servers:
+      - "{{ dc_ip }}"
+      - 1.1.1.1
+  - interface: opt1
+    range_from: 10.10.20.100
+    range_to: 10.10.20.150
+    gateway: 10.10.20.1
+    domain: mgmt.lab.local
+    dns_servers:
+      - 1.1.1.1
+      - 9.9.9.9
+
+# Static mappings — MAC addresses must be filled in locally (git-ignored overlay recommended).
+pfsense_dhcp_static_maps:
+  - interface: lan
+    mac: "REDACTED-DC01-MAC"
+    ip: "{{ dc_ip }}"
+    hostname: dc01
+    descr: Domain Controller
+  - interface: lan
+    mac: "REDACTED-WKSTN01-MAC"
+    ip: "{{ wkstn_ip }}"
+    hostname: wkstn01
+    descr: Domain-joined workstation
