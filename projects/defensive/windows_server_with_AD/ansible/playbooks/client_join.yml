@@ -1,0 +1,7 @@
+---
+- name: Domain-join workstation
+  hosts: domain_clients
+  gather_facts: true
+  roles:
+    - windows_base
+    - domain_client

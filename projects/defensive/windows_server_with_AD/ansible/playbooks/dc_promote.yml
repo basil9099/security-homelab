@@ -1,0 +1,7 @@
+---
+- name: Base configuration + DC promotion
+  hosts: domain_controllers
+  gather_facts: true
+  roles:
+    - windows_base
+    - ad_domain_controller

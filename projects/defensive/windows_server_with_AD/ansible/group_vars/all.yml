@@ -1,0 +1,26 @@
+---
+# Domain-wide settings shared across all hosts.
+
+domain_name: homelab.local
+domain_netbios_name: HOMELAB
+domain_admin_user: "HOMELAB\\Administrator"
+
+# Network layout (matches the pfSense lab's LAN subnet 10.10.10.0/24).
+dc_ip_address: 10.10.10.10
+dc_subnet_prefix: 24
+dc_gateway: 10.10.10.1
+dns_servers:
+  - 10.10.10.10
+  - 1.1.1.1
+
+# Secrets pulled from the vault — see ../README.md "Vault setup".
+# vault_domain_safe_mode_password
+# vault_domain_admin_password
+# vault_user_initial_password
+
+ansible_user: "{{ lookup('env', 'ANSIBLE_WINRM_USER') | default('vagrant', true) }}"
+ansible_password: "{{ lookup('env', 'ANSIBLE_WINRM_PASSWORD') | default('vagrant', true) }}"
+ansible_connection: winrm
+ansible_port: 5986
+ansible_winrm_transport: ntlm
+ansible_winrm_server_cert_validation: ignore

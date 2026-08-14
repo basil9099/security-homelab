@@ -1,0 +1,48 @@
+---
+# Read-only assertions. Exits non-zero if any expected AD object is missing.
+
+- name: Smoke-test homelab.local
+  hosts: domain_controllers
+  gather_facts: false
+  vars_files:
+    - ../vars/users.yml
+    - ../vars/ous.yml
+    - ../vars/groups.yml
+  tasks:
+    - name: AD Web Services running
+      ansible.windows.win_service:
+        name: ADWS
+      register: adws
+      failed_when: adws.state != 'running'
+
+    - name: Expected OUs exist
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        $parts = "{{ item.path }}" -split ','
+        $dn = "OU={{ item.name }}," + "{{ item.path }}"
+        Get-ADOrganizationalUnit -Identity $dn -ErrorAction Stop | Out-Null
+      loop: "{{ ad_ous }}"
+      changed_when: false
+
+    - name: Expected groups exist
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        Get-ADGroup -Identity "{{ item.name }}" -ErrorAction Stop | Out-Null
+      loop: "{{ ad_groups }}"
+      changed_when: false
+
+    - name: Expected users exist
+      ansible.windows.win_shell: |
+        Import-Module ActiveDirectory
+        Get-ADUser -Identity "{{ item.sam_account_name }}" -ErrorAction Stop | Out-Null
+      loop: "{{ ad_users }}"
+      loop_control:
+        label: "{{ item.sam_account_name }}"
+      changed_when: false
+
+    - name: Password policy enforced (min length >= 14)
+      ansible.windows.win_shell: |
+        (Get-ADDefaultDomainPasswordPolicy).MinPasswordLength
+      register: minlen
+      changed_when: false
+      failed_when: (minlen.stdout | trim | int) < 14

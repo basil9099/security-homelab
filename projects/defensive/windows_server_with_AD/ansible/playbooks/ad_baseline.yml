@@ -1,0 +1,12 @@
+---
+- name: Apply AD baseline (OUs, groups, users, GPOs)
+  hosts: domain_controllers
+  gather_facts: false
+  vars_files:
+    - ../vars/ous.yml
+    - ../vars/groups.yml
+    - ../vars/users.yml
+    - ../vars/gpos.yml
+  roles:
+    - ad_users_groups
+    - ad_gpos

@@ -1,0 +1,3 @@
+---
+computer_role: domain_controller
+computer_description: Primary domain controller for homelab.local

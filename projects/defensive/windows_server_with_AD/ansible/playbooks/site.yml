@@ -1,0 +1,7 @@
+---
+- name: End-to-end provision of homelab.local
+  import_playbook: dc_promote.yml
+
+- import_playbook: ad_baseline.yml
+
+- import_playbook: client_join.yml
