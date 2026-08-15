@@ -39,7 +39,7 @@ into Splunk for detection.
 
 ## Links
 
-- **HackTheBox:** [basil9099](https://app.hackthebox.com/profile/basil9099)
+- **HackTheBox:** [basil9099](https://profile.hackthebox.com/profile/019d7feb-62bf-71b2-91b4-3f2626fb6acf)
 - **Blog:** [basil9099.github.io](https://basil9099.github.io)
 - **LinkedIn:** [Angus Dawson](https://www.linkedin.com/in/angus-dawson-92b035249)
 
