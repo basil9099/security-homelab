@@ -1,0 +1,33 @@
+# Honeypot Configuration
+# =====================
+# All ports use high (unprivileged) values by default.
+# Use iptables port forwarding to map standard ports if needed.
+
+protocols:
+  ssh:
+    enabled: true
+    port: 2222
+    banner: "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"
+  http:
+    enabled: true
+    port: 8080
+    banner: "Apache/2.4.41 (Ubuntu)"
+  ftp:
+    enabled: true
+    port: 2121
+    banner: "220 ProFTPD 1.3.5 Server ready."
+  telnet:
+    enabled: true
+    port: 2323
+    banner: "Ubuntu 22.04 LTS"
+
+logging:
+  file: "honeypot_events.jsonl"
+  console: true
+
+dashboard:
+  refresh_rate: 0.5    # seconds
+
+demo:
+  duration: 60         # seconds
+  rate: 2.0            # events per second
