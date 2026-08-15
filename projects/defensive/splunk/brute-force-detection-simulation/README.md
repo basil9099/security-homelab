@@ -70,7 +70,7 @@ done
 
 ---
 
-## 📡 Splunk Detection
+## 6. Splunk Detection
 
 Splunk alert triggered based on EventCode 4625 (Failed Logon):
 
