@@ -24,7 +24,7 @@ detect against.
 | Project | What it is | Key tech |
 |---|---|---|
 | [Honeypot](projects/offensive/honeypot/) | Multi-protocol honeypot (SSH/HTTP/FTP/Telnet) with a live dashboard | Python, Paramiko |
-| [Network Vulnerability Scanner](projects/offensive/vulnerability_scanner/) | Port scanning, banner grabbing, and CVE lookup with reporting | Python, Nmap, NVD |
+| [Network Vulnerability Scanner](projects/offensive/network-vulnerability-scanner/) | Port scanning, banner grabbing, and CVE lookup with reporting | Python, Nmap, NVD |
 | [HackTheBox Writeups](projects/offensive/htb_writeups/) | Documented walkthroughs of retired HTB machines and homelab exercises | — |
 
 ## The Lab
