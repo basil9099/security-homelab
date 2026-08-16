@@ -22,9 +22,18 @@ _logging.getLogger("paramiko").setLevel(_logging.CRITICAL)
 
 try:
     import paramiko
+
     _HAS_PARAMIKO = True
+    _ServerInterfaceBase = paramiko.ServerInterface
 except ImportError:
     _HAS_PARAMIKO = False
+
+    class _ServerInterfaceBase:
+        """Stand-in base so this module still imports without paramiko.
+
+        SSHHandler.start() bails out early when _HAS_PARAMIKO is False, so
+        no method on the subclass is ever reached in that case.
+        """
 
 # Fake shell responses (shared with telnet, but SSH-specific extras)
 _SHELL_RESPONSES: dict[str, str] = {
@@ -86,15 +95,29 @@ def _get_host_key() -> paramiko.RSAKey:
     return key
 
 
-class _SSHServer(paramiko.ServerInterface):
+class _SSHServer(_ServerInterfaceBase):
     """Paramiko server interface that accepts any credentials."""
 
-    def __init__(self, emit_fn, config, session_id: str, addr: tuple[str, int]):
-        self._emit = emit_fn
-        self._config = config
+    def __init__(
+        self,
+        handler: SSHHandler,
+        session_id: str,
+        addr: tuple[str, int],
+    ) -> None:
+        self._handler = handler
         self._session_id = session_id
         self._addr = addr
         self._event = threading.Event()
+
+    def _log_auth(self, username: str, password: str, method: str) -> None:
+        """Emit a credential_attempt through the owning handler."""
+        ip, port = self._addr
+        self._handler._emit(self._handler._make_event(
+            ip, port, "credential_attempt",
+            credentials={"username": username, "password": password},
+            session_id=self._session_id,
+            metadata={"auth_method": method},
+        ))
 
     def check_channel_request(self, kind, chanid):
         if kind == "session":
@@ -102,18 +125,11 @@ class _SSHServer(paramiko.ServerInterface):
         return paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
     def check_auth_password(self, username: str, password: str) -> int:
-        self._emit(self._emit.__self__._make_event(
-            self._addr[0], self._addr[1], "credential_attempt",
-            credentials={"username": username, "password": password},
-            session_id=self._session_id,
-            metadata={"auth_method": "password"},
-        ) if hasattr(self._emit, '__self__') else _make_cred_event(
-            self._emit, self._config, self._addr, self._session_id,
-            username, password, "password",
-        ))
+        self._log_auth(username, password, "password")
         return paramiko.AUTH_SUCCESSFUL
 
     def check_auth_publickey(self, username: str, key) -> int:
+        self._log_auth(username, "", "publickey")
         return paramiko.AUTH_SUCCESSFUL
 
     def get_allowed_auths(self, username: str) -> str:
@@ -129,22 +145,6 @@ class _SSHServer(paramiko.ServerInterface):
     def check_channel_exec_request(self, channel, command) -> bool:
         self._event.set()
         return True
-
-
-def _make_cred_event(emit_fn, config, addr, session_id, username, password, method):
-    """Standalone event creation for credential attempts."""
-    from models import HoneypotEvent
-    event = HoneypotEvent(
-        protocol="ssh",
-        src_ip=addr[0],
-        src_port=addr[1],
-        dst_port=config.port,
-        event_type="credential_attempt",
-        credentials={"username": username, "password": password},
-        session_id=session_id,
-        metadata={"auth_method": method},
-    )
-    emit_fn(event)
 
 
 @register
@@ -192,7 +192,7 @@ class SSHHandler(ProtocolHandler):
             transport.local_version = self._config.banner or "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"
             transport.add_server_key(host_key)
 
-            server = _SSHServer(self._emit, self._config, session_id, addr)
+            server = _SSHServer(self, session_id, addr)
             transport.start_server(server=server)
 
             chan = transport.accept(timeout=20)
@@ -208,14 +208,14 @@ class SSHHandler(ProtocolHandler):
             chan.sendall(b"Last login: Mon Jan 15 09:20:11 2026 from 10.10.10.100\r\n")
             self._shell_loop(chan, ip, port, session_id)
 
-        except Exception:
+        except (paramiko.SSHException, OSError, EOFError):
             pass
         finally:
             self._emit(self._make_event(ip, port, "disconnect", session_id=session_id))
             if transport:
                 try:
                     transport.close()
-                except Exception:
+                except (paramiko.SSHException, OSError):
                     pass
             conn.close()
 
@@ -227,7 +227,7 @@ class SSHHandler(ProtocolHandler):
         for _ in range(50):  # max iterations
             try:
                 data = chan.recv(1024)
-            except Exception:
+            except (paramiko.SSHException, OSError, EOFError):
                 break
             if not data:
                 break

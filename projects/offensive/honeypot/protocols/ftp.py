@@ -61,7 +61,6 @@ class FTPHandler(ProtocolHandler):
             conn.sendall(f"{banner}\r\n".encode())
 
             username = ""
-            authenticated = False
 
             for _ in range(30):  # max commands per session
                 try:
@@ -83,22 +82,17 @@ class FTPHandler(ProtocolHandler):
                     ip, port, "command", payload=line, session_id=session_id,
                 ))
 
-                response = self._handle_command(
-                    cmd, arg, ip, port, session_id,
-                    username, authenticated,
-                )
+                response = self._handle_command(cmd, arg, username)
 
                 # Track state
                 if cmd == "USER":
                     username = arg
-                    authenticated = False
                 elif cmd == "PASS" and username:
                     self._emit(self._make_event(
                         ip, port, "credential_attempt",
                         credentials={"username": username, "password": arg},
                         session_id=session_id,
                     ))
-                    authenticated = True
 
                 conn.sendall(f"{response}\r\n".encode())
 
@@ -111,16 +105,7 @@ class FTPHandler(ProtocolHandler):
             self._emit(self._make_event(ip, port, "disconnect", session_id=session_id))
             conn.close()
 
-    def _handle_command(
-        self,
-        cmd: str,
-        arg: str,
-        ip: str,
-        port: int,
-        session_id: str,
-        username: str,
-        authenticated: bool,
-    ) -> str:
+    def _handle_command(self, cmd: str, arg: str, username: str) -> str:
         """Return the FTP response string for a given command."""
         responses: dict[str, str] = {
             "USER": f"331 Password required for {arg}",

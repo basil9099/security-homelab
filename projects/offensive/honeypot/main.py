@@ -49,6 +49,13 @@ try:
     _colorama_init(autoreset=True)
     _COLORS = True
 except ImportError:
+    class _NoColor:
+        """Stand-in for colorama's Fore/Style so call sites need no guards."""
+
+        def __getattr__(self, _name: str) -> str:
+            return ""
+
+    Fore = Style = _NoColor()
     _COLORS = False
 
 
@@ -59,10 +66,7 @@ def _c(text: str, color: str) -> str:
 
 
 def _print_banner() -> None:
-    if _COLORS:
-        print(f"{Fore.CYAN}{_BANNER}{Style.RESET_ALL}")
-    else:
-        print(_BANNER)
+    print(_c(_BANNER, Fore.CYAN))
 
 
 def _print_disclaimer() -> None:
@@ -71,10 +75,7 @@ def _print_disclaimer() -> None:
         "testing and educational purposes only. Unauthorized use against "
         "systems you do not own or have explicit permission to test is illegal."
     )
-    if _COLORS:
-        print(f"{Fore.YELLOW}{msg}{Style.RESET_ALL}\n")
-    else:
-        print(msg + "\n")
+    print(_c(msg, Fore.YELLOW) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +120,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--json",
         action="store_true",
-        help="Print events as JSON to stdout",
+        help="Print events as JSON to stdout (ignored with --dashboard)",
     )
     return parser
 
@@ -160,10 +161,10 @@ def _run_live(
         t = threading.Thread(target=h.start, name=f"proto-{h.PROTOCOL_NAME}", daemon=True)
         t.start()
         threads.append(t)
-        if _COLORS:
-            print(f"  {Fore.GREEN}[+]{Style.RESET_ALL} {h.PROTOCOL_NAME.upper():8s} listening on port {h._config.port}")
-        else:
-            print(f"  [+] {h.PROTOCOL_NAME.upper():8s} listening on port {h._config.port}")
+        print(
+            f"  {_c('[+]', Fore.GREEN)} {h.PROTOCOL_NAME.upper():8s} "
+            f"listening on port {h._config.port}"
+        )
 
     print()
 
@@ -270,7 +271,15 @@ def main() -> None:
     if args.log_file:
         cfg.log_file = args.log_file
 
-    logger = EventLogger(log_file=cfg.log_file)
+    # Echoing to stdout would corrupt the dashboard's rendering, so it is
+    # suppressed whenever the dashboard is running. --json wins over the
+    # config's human-readable console echo.
+    can_echo = not args.dashboard
+    logger = EventLogger(
+        log_file=cfg.log_file,
+        echo_json=args.json and can_echo,
+        echo_console=cfg.log_to_console and not args.json and can_echo,
+    )
 
     # Determine which protocols to enable
     if args.protocols:
