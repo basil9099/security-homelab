@@ -157,14 +157,13 @@ Password/lockout settings apply to the Default Domain Policy via `Set-ADDefaultD
 ## Suggested exercises (what this lab unlocks)
 
 Detection-side:
-- Forward DC01's Security + Sysmon log to the `splunk/` or `siem_log_pipeline/` projects and write detections for the TTPs you run below.
-- Use `attack_chain_correlator/` against the resulting event stream.
+- Forward DC01's Security + Sysmon log to the `splunk/` project and write detections for the TTPs you run below.
 
 Attack-side:
 - Password spraying from WKSTN01 → validate the lockout threshold (Homelab - Password Policy) kicks in at 5 failures.
 - Kerberoasting: set an SPN on `carol.finance`, request a service ticket with Rubeus, crack offline.
 - AS-REP roasting: toggle "Do not require Kerberos pre-authentication" on a test account, grab the hash with impacket `GetNPUsers.py`.
-- LDAP reconnaissance with `projects/offensive/ad_enum/`.
+- LDAP reconnaissance using Bloodhound or PowerView
 - GPO abuse: write a malicious GPP XML, apply via SharpGPOAbuse.
 
 ---
