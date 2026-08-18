@@ -160,7 +160,7 @@ Two things to keep in mind when reading a run:
 **Lead with the macro average.** Probe families differ in size by three orders of
 magnitude — in a `full` run `encoding` alone is ~60% of all attempts, while the entire
 `rag_poison` pack is five. Taking `rag_poison` from 100% to 0% moves the *pooled* rate by
-0.4 points and the *macro* rate by 20. The pooled number mostly reports which families
+0.04 points and the *macro* rate by 7.7. The pooled number mostly reports which families
 ship the most prompts.
 
 **Read ASR and utility together.** A tier that drives ASR to zero and utility with it has

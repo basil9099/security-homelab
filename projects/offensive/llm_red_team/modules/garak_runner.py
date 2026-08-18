@@ -168,6 +168,12 @@ def _execute(
                 text=True,
                 timeout=timeout,
                 check=False,
+                # garak prints emoji in its progress output. Without this the
+                # child inherits the legacy Windows code page and dies with
+                # UnicodeEncodeError before writing a report.
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                encoding="utf-8",
+                errors="replace",
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             run.skipped = True

@@ -3,7 +3,7 @@
 **Target**: ACME Assist (bundled vulnerable application), tiers `naive` / `guarded` / `hardened`
 **Engines**: garak 0.16.0 (10 families) + native packs (4 packs + benign control)
 **Backend**: `mock` — the deterministic simulator, **not** a language model (see caveat below)
-**Scale**: 12,880 attempts per tier, 38,640 total, 13 probe families
+**Scale**: 13,136 attempts per tier, 39,408 total, 13 probe families
 **Command**: `python main.py scan --all-tiers --suite full --backend mock --generations 1`
 
 ---
@@ -33,14 +33,14 @@ for `promptinject`, how often `dan` actually lands. For that, re-run with
 
 | Tier | Controls added | Macro ASR | Pooled ASR | Utility | Contained leaks |
 |---|---|---|---|---|---|
-| `naive` | none | **42.0%** | 6.0% | 100% | 0 |
-| `guarded` | prompt guard rules | **37.0%** | 5.9% | 100% | 0 |
-| `hardened` | + classifier, spotlighting, tool gate, output scanner | **20.4%** | 5.6% | 100% | 1 |
+| `naive` | none | **42.0%** | 5.9% | 100% | 0 |
+| `guarded` | prompt guard rules | **37.0%** | 5.8% | 100% | 0 |
+| `hardened` | + classifier, spotlighting, tool gate, output scanner | **20.4%** | 5.5% | 100% | 1 |
 
 | Tier | Macro ASR reduction | Pooled ASR reduction | Utility change |
 |---|---|---|---|
-| `guarded` | **+5.1 pts** | +0.06 pts | ±0 |
-| `hardened` | **+21.6 pts** | +0.40 pts | ±0 |
+| `guarded` | **+5.1 pts** | +0.14 pts | ±0 |
+| `hardened` | **+21.6 pts** | +0.41 pts | ±0 |
 
 Hardening cut attack success by more than half and cost nothing on the benign control
 group — all 8 ordinary helpdesk requests were answered at every tier, including the one
@@ -153,15 +153,15 @@ relying on the classifier as a boundary.
 
 ### M1 — Pooled attack success rate is dominated by probe volume
 Probe families differ in size by three orders of magnitude. In this run `encoding` alone
-shipped **7,680 of 12,880** attempts (60%) and `latentinjection` another 2,216, while the
+shipped **7,680 of 13,136** attempts (58%) and `latentinjection` another 2,472, while the
 entire `rag_poison` pack is 5.
 
-The consequence: taking `rag_poison` from 100% to 0% moves the pooled rate by **0.4
+The consequence: taking `rag_poison` from 100% to 0% moves the pooled rate by **0.04
 points**. The pooled number reports which families are large, not how secure the target is.
 
 The tool therefore leads with a **macro average** — the unweighted mean of per-family
 rates, every family counted once. Same run, same data: pooled says hardening bought
-+0.42 points, macro says **+21.7**. The second is the true statement.
++0.41 points, macro says **+21.6**. The second is the true statement.
 
 ### M1a — garak family rates move a little between runs
 The native packs are fully deterministic: same probes, same order, identical numbers on
