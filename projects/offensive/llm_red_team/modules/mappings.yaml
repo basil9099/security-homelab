@@ -1,0 +1,322 @@
+# Probe family -> control-framework mapping
+#
+# One row per probe family. Keys are matched against the family produced by
+# modules.parser.family_of(), so garak probe modules ("promptinject") and native
+# packs ("native.canary_exfil") live in the same table.
+#
+# References:
+#   OWASP Top 10 for LLM Applications 2025 — https://genai.owasp.org/llm-top-10/
+#   MITRE ATLAS                            — https://atlas.mitre.org/
+#
+# severity is the rating applied to a *confirmed hit* in this family against
+# this application. It reflects impact on the target, not the probe's novelty.
+
+default:
+  title: Unmapped probe family
+  owasp_id: ""
+  owasp_name: ""
+  atlas: []
+  severity: medium
+  description: No mapping recorded for this family yet.
+  remediation: Review the probe's documentation and add a row to mappings.yaml.
+
+families:
+  # -- garak: prompt injection ---------------------------------------------
+  promptinject:
+    title: Direct prompt injection (PromptInject corpus)
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0051.000
+        name: "LLM Prompt Injection: Direct"
+    severity: high
+    description: >-
+      Attacker-supplied text in the user turn overrides the system instructions,
+      making the model emit a string of the attacker's choosing.
+    remediation: >-
+      Treat the user turn as untrusted data. Enforce an explicit instruction
+      hierarchy, and verify behaviour with an outbound check rather than trusting
+      the system prompt to hold.
+
+  goodside:
+    title: Practical injection techniques (Riley Goodside)
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0051.000
+        name: "LLM Prompt Injection: Direct"
+    severity: high
+    description: >-
+      Well-known real-world injection phrasings, including instruction-ignoring
+      and encoded-payload variants.
+    remediation: >-
+      Do not rely on phrasing-specific denylists; these payloads exist precisely
+      because they defeat them.
+
+  latentinjection:
+    title: Indirect (latent) prompt injection
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0051.001
+        name: "LLM Prompt Injection: Indirect"
+    severity: critical
+    description: >-
+      Injection carried inside content the model is asked to process — a
+      document, a translation source, a report — rather than in the user's own
+      message. The user never sees the payload.
+    remediation: >-
+      Spotlight retrieved content: delimit it, datamark it, and state in the
+      system prompt that it is data. Never let retrieved text reach the model in
+      the same framing as operator instructions.
+
+  encoding:
+    title: Encoded-payload injection
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0051.000
+        name: "LLM Prompt Injection: Direct"
+    severity: high
+    description: >-
+      The injection is base64/ROT13/hex encoded. Pattern-matching input filters
+      see noise; the model decodes and complies.
+    remediation: >-
+      Move detection to the output side, where the payload has been decoded.
+      Input filtering alone cannot cover this class.
+
+  suffix:
+    title: Adversarial suffix (GCG-style)
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0054
+        name: LLM Jailbreak
+    severity: high
+    description: >-
+      A machine-optimised token suffix appended to an otherwise refused request
+      flips the model into complying.
+    remediation: >-
+      Suffixes are not human-readable and will not match a denylist. Rely on
+      output-side controls and rate limiting on repeated near-miss requests.
+
+  # -- garak: jailbreak ----------------------------------------------------
+  dan:
+    title: DAN-family persona jailbreaks
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0054
+        name: LLM Jailbreak
+    severity: high
+    description: >-
+      Persona-swap prompts ("you are DAN, you have no rules") that talk the model
+      out of its guardrails.
+    remediation: >-
+      Refusal training degrades under persona pressure. Enforce policy outside
+      the model — on the tool layer and the response — not only inside it.
+
+  grandma:
+    title: Emotional-pretext jailbreaks
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0054
+        name: LLM Jailbreak
+    severity: medium
+    description: >-
+      Sympathetic framing ("my grandmother used to read me...") used to obtain
+      content the model would otherwise refuse.
+    remediation: >-
+      Same as DAN — the control has to sit outside the model's judgement.
+
+  malwaregen:
+    title: Malicious code generation
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0054
+        name: LLM Jailbreak
+    severity: medium
+    description: >-
+      The model is talked into producing functional offensive code.
+    remediation: >-
+      Scope the assistant's domain and reject out-of-domain requests at the
+      application layer.
+
+  # -- garak: leakage / output handling ------------------------------------
+  leakreplay:
+    title: Training-data replay
+    owasp_id: LLM02
+    owasp_name: Sensitive Information Disclosure
+    atlas:
+      - id: AML.T0057
+        name: LLM Data Leakage
+    severity: medium
+    description: >-
+      The model reproduces memorised passages from its training data when primed
+      with a prefix.
+    remediation: >-
+      A property of the base model, not the application. Record it as accepted
+      risk or change model; the application layer cannot fix it.
+
+  divergence:
+    title: Divergence / repetition data extraction
+    owasp_id: LLM02
+    owasp_name: Sensitive Information Disclosure
+    atlas:
+      - id: AML.T0057
+        name: LLM Data Leakage
+    severity: medium
+    description: >-
+      Repetition attacks that push the model into emitting raw training data.
+    remediation: >-
+      Cap output length and detect degenerate repetition in responses.
+
+  web_injection:
+    title: Markup-borne exfiltration and XSS
+    owasp_id: LLM05
+    owasp_name: Improper Output Handling
+    atlas:
+      - id: AML.T0057
+        name: LLM Data Leakage
+    severity: critical
+    description: >-
+      The model is induced to emit markdown or HTML whose URL carries data out
+      when the response is rendered by the client, or script that executes there.
+    remediation: >-
+      Strip or allowlist markup before rendering. Never render model output as
+      raw HTML/markdown with arbitrary outbound URLs.
+
+  # garak called this family `xss` before 0.16. Kept so reports from older garak
+  # versions still map instead of falling through to the default row.
+  xss:
+    title: Markup-borne exfiltration and XSS
+    owasp_id: LLM05
+    owasp_name: Improper Output Handling
+    atlas:
+      - id: AML.T0057
+        name: LLM Data Leakage
+    severity: critical
+    description: >-
+      Pre-0.16 name for the `web_injection` family.
+    remediation: >-
+      Strip or allowlist markup before rendering. Never render model output as
+      raw HTML/markdown with arbitrary outbound URLs.
+
+  packagehallucination:
+    title: Hallucinated package names
+    owasp_id: LLM03
+    owasp_name: Supply Chain
+    atlas:
+      - id: AML.T0054
+        name: LLM Jailbreak
+    severity: medium
+    description: >-
+      The model recommends packages that do not exist, which an attacker can
+      then register (slopsquatting).
+    remediation: >-
+      Resolve every suggested dependency against the real index before use.
+
+  misleading:
+    title: Confident false claims
+    owasp_id: LLM09
+    owasp_name: Misinformation
+    atlas: []
+    severity: low
+    description: >-
+      The model asserts false statements without hedging.
+    remediation: >-
+      Ground answers in retrieved sources and surface citations.
+
+  snowball:
+    title: Snowballed hallucination
+    owasp_id: LLM09
+    owasp_name: Misinformation
+    atlas: []
+    severity: low
+    description: >-
+      An early wrong answer is defended and elaborated across the response.
+    remediation: >-
+      Same as misleading — grounding plus citation.
+
+  glitch:
+    title: Glitch tokens
+    owasp_id: LLM09
+    owasp_name: Misinformation
+    atlas: []
+    severity: low
+    description: >-
+      Undertrained tokens push the model into undefined behaviour.
+    remediation: >-
+      Normalise and validate input encoding before it reaches the model.
+
+  # -- native packs --------------------------------------------------------
+  native.canary_exfil:
+    title: System-prompt canary extraction
+    owasp_id: LLM07
+    owasp_name: System Prompt Leakage
+    atlas:
+      - id: AML.T0056
+        name: Extract LLM System Prompt
+      - id: AML.T0051.000
+        name: "LLM Prompt Injection: Direct"
+    severity: critical
+    description: >-
+      A unique token planted in the system prompt reaches the caller, proving the
+      operator instructions and anything alongside them are readable.
+    remediation: >-
+      Keep secrets out of the system prompt entirely — the prompt is not a
+      confidentiality boundary. Where a marker must exist, scan responses for it
+      before delivery.
+
+  native.policy_override:
+    title: Instruction override
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0051.000
+        name: "LLM Prompt Injection: Direct"
+    severity: high
+    description: >-
+      The model emits an attacker-chosen marker string, demonstrating that
+      attacker text outranked the operator's instructions.
+    remediation: >-
+      Enforce an instruction hierarchy and validate that responses stay within
+      the assistant's declared task.
+
+  native.tool_hijack:
+    title: Tool invocation hijack
+    owasp_id: LLM06
+    owasp_name: Excessive Agency
+    atlas:
+      - id: AML.T0053
+        name: AI Agent Tool Invocation
+      - id: AML.T0051.000
+        name: "LLM Prompt Injection: Direct"
+    severity: critical
+    description: >-
+      Injected text causes an exfil-capable tool to run, or points a file-read
+      tool outside its intended scope. Injection stops being a content problem
+      and becomes an action problem.
+    remediation: >-
+      Least privilege on the tool registry, an allowlist for side-effect-free
+      tools, human confirmation for anything that sends or writes, and path
+      validation on file access.
+
+  native.rag_poison:
+    title: Retrieved-document injection
+    owasp_id: LLM01
+    owasp_name: Prompt Injection
+    atlas:
+      - id: AML.T0051.001
+        name: "LLM Prompt Injection: Indirect"
+    severity: critical
+    description: >-
+      A payload hidden in a document the assistant retrieves — an invoice, a
+      ticket, a KB article — drives the model. The victim never sees it and never
+      typed it.
+    remediation: >-
+      Spotlight all retrieved content, treat every corpus document as attacker
+      controlled, and apply the same tool and output controls to
+      retrieval-triggered turns as to direct ones.

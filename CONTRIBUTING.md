@@ -58,25 +58,14 @@ pytest tests -q
 ```
 
 Tests must be **deterministic and network-free** — mock or guard any HTTP,
-DNS, or socket calls so the suite passes in CI without external services.
+DNS, or socket calls so the suite passes without external services.
 
-## Continuous integration
-
-`.github/workflows/ci.yml` runs two jobs on every push and pull request:
-
-- **lint** — `ruff check` over the projects currently under CI.
-- **test** — a matrix of `{project} × {Python 3.11, 3.12}`; each cell installs
-  the project's `requirements-dev.txt` and runs its tests.
-
-To bring a new project under CI:
-
-1. Add a `tests/` directory, an empty root `conftest.py`, and a `requirements-dev.txt`.
-2. Add the project's path to the `ruff check` list in the **lint** job.
-3. Add the project's path to the `project` list in the **test** matrix.
+To make a new project testable, add a `tests/` directory, an empty root
+`conftest.py`, and a `requirements-dev.txt`.
 
 ## Commit & PR conventions
 
 - Keep commit messages imperative and scoped (e.g. `Add tests for honeypot event logger`).
 - Never commit secrets, real capture files, or malware samples — see
   `.gitignore`, which already blocks binaries, samples, and runtime artifacts.
-- Open a pull request against `main`; CI must be green before merge.
+- Open a pull request against `main`; run the tests and `ruff check` before merge.
