@@ -27,55 +27,23 @@ import signal
 import threading
 
 from config import HoneypotConfig
-from event_logging.event_logger import EventLogger
+from event_logger import EventLogger
 
-# ---------------------------------------------------------------------------
-# Banner
-# ---------------------------------------------------------------------------
-
-_BANNER = r"""
-            [ Multi-Protocol Honeypot ]
-        SSH  |  HTTP  |  FTP  |  Telnet
-"""
-
-# ---------------------------------------------------------------------------
-# ANSI colours (graceful fallback)
-# ---------------------------------------------------------------------------
-
-try:
-    from colorama import Fore, Style
-    from colorama import init as _colorama_init
-
-    _colorama_init(autoreset=True)
-    _COLORS = True
-except ImportError:
-    class _NoColor:
-        """Stand-in for colorama's Fore/Style so call sites need no guards."""
-
-        def __getattr__(self, _name: str) -> str:
-            return ""
-
-    Fore = Style = _NoColor()
-    _COLORS = False
-
-
-def _c(text: str, color: str) -> str:
-    if not _COLORS:
-        return text
-    return f"{color}{text}{Style.RESET_ALL}"
+# ANSI colours — handled natively by Windows 10+ consoles and every POSIX terminal.
+CYAN, GREEN, YELLOW, RESET = "\033[36m", "\033[32m", "\033[33m", "\033[0m"
 
 
 def _print_banner() -> None:
-    print(_c(_BANNER, Fore.CYAN))
+    print(f"\n{CYAN}            [ Multi-Protocol Honeypot ]")
+    print(f"        SSH  |  HTTP  |  FTP  |  Telnet{RESET}\n")
 
 
 def _print_disclaimer() -> None:
-    msg = (
-        "[!] LEGAL DISCLAIMER: This tool is intended for authorized security "
+    print(
+        f"{YELLOW}[!] LEGAL DISCLAIMER: This tool is intended for authorized security "
         "testing and educational purposes only. Unauthorized use against "
-        "systems you do not own or have explicit permission to test is illegal."
+        f"systems you do not own or have explicit permission to test is illegal.{RESET}\n"
     )
-    print(_c(msg, Fore.YELLOW) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +97,15 @@ def _build_parser() -> argparse.ArgumentParser:
 # Orchestration
 # ---------------------------------------------------------------------------
 
+def _install_signal_handlers(stop: threading.Event) -> None:
+    """Set SIGINT/SIGTERM to trip *stop* instead of raising."""
+    def _handler(sig, frame):
+        stop.set()
+
+    signal.signal(signal.SIGINT, _handler)
+    signal.signal(signal.SIGTERM, _handler)
+
+
 def _run_live(
     cfg: HoneypotConfig,
     logger: EventLogger,
@@ -137,19 +114,17 @@ def _run_live(
     duration: int | None,
 ) -> None:
     """Start real protocol handlers and optionally the dashboard."""
-    from protocols import available_protocols, get_handler
+    from protocols import HANDLERS
 
     handlers = []
     for name in enabled_protocols:
-        if name not in available_protocols():
-            print(f"[!] Unknown protocol: {name} (available: {available_protocols()})")
+        if name not in HANDLERS:
+            print(f"[!] Unknown protocol: {name} (available: {list(HANDLERS)})")
             continue
         proto_cfg = cfg.protocols.get(name)
         if not proto_cfg:
             continue
-        handler_cls = get_handler(name)
-        handler = handler_cls(proto_cfg, logger.log)
-        handlers.append(handler)
+        handlers.append(HANDLERS[name](proto_cfg, logger.log))
 
     if not handlers:
         print("[!] No protocol handlers to start. Exiting.")
@@ -162,29 +137,21 @@ def _run_live(
         t.start()
         threads.append(t)
         print(
-            f"  {_c('[+]', Fore.GREEN)} {h.PROTOCOL_NAME.upper():8s} "
+            f"  {GREEN}[+]{RESET} {h.PROTOCOL_NAME.upper():8s} "
             f"listening on port {h._config.port}"
         )
 
     print()
 
-    # Shutdown coordination
     stop = threading.Event()
-
-    def _signal_handler(sig, frame):
-        stop.set()
-
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
+    _install_signal_handlers(stop)
 
     if dashboard:
         _run_dashboard(logger, cfg.dashboard_refresh, stop, duration)
     else:
-        if duration:
-            stop.wait(timeout=duration)
-        else:
+        if not duration:
             print("[*] Honeypot running. Press Ctrl+C to stop.\n")
-            stop.wait()
+        stop.wait(timeout=duration)  # timeout=None blocks until signalled
 
     # Graceful shutdown
     print("\n[*] Shutting down handlers...")
@@ -210,12 +177,7 @@ def _run_demo(
     sim = AttackSimulator(event_callback=logger.log, rate=cfg.demo_rate)
 
     stop = threading.Event()
-
-    def _signal_handler(sig, frame):
-        stop.set()
-
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
+    _install_signal_handlers(stop)
 
     sim_thread = threading.Thread(target=sim.run, args=(dur, stop), daemon=True)
     sim_thread.start()
@@ -223,10 +185,7 @@ def _run_demo(
     if dashboard:
         _run_dashboard(logger, cfg.dashboard_refresh, stop, dur)
     else:
-        if dur:
-            stop.wait(timeout=dur)
-        else:
-            stop.wait()
+        stop.wait(timeout=dur)
 
     stop.set()
     sim_thread.join(timeout=3)
@@ -242,17 +201,15 @@ def _run_dashboard(
     stop: threading.Event,
     duration: int | None,
 ) -> None:
-    """Start the Rich live dashboard."""
+    """Start the Rich live dashboard, or just wait if rich is unavailable."""
     try:
         from dashboard.live import Dashboard
-        dash = Dashboard(logger, refresh_rate=refresh_rate)
-        dash.run(stop, duration)
     except ImportError:
         print("[!] 'rich' is not installed — falling back to console output")
-        if duration:
-            stop.wait(timeout=duration)
-        else:
-            stop.wait()
+        stop.wait(timeout=duration)
+        return
+
+    Dashboard(logger, refresh_rate=refresh_rate).run(stop, duration)
 
 
 # ---------------------------------------------------------------------------
@@ -260,8 +217,7 @@ def _run_dashboard(
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    parser = _build_parser()
-    args = parser.parse_args()
+    args = _build_parser().parse_args()
 
     _print_banner()
     _print_disclaimer()

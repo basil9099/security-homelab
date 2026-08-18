@@ -96,21 +96,15 @@ class AttackSimulator:
         end_time = time.time() + duration
 
         generators = [
-            (0.35, self._ssh_brute_force),
-            (0.25, self._http_probe),
-            (0.20, self._ftp_attempt),
-            (0.20, self._telnet_login),
+            self._ssh_brute_force,
+            self._http_probe,
+            self._ftp_attempt,
+            self._telnet_login,
         ]
+        weights = [0.35, 0.25, 0.20, 0.20]
 
         while not stop.is_set() and time.time() < end_time:
-            # Weighted random selection
-            r = random.random()
-            cumulative = 0.0
-            for weight, gen_fn in generators:
-                cumulative += weight
-                if r <= cumulative:
-                    gen_fn()
-                    break
+            random.choices(generators, weights)[0]()
 
             # Jitter around the target rate
             jitter = interval * random.uniform(0.5, 1.5)

@@ -10,10 +10,9 @@ and observe attacker command sequences.
 from __future__ import annotations
 
 import socket
-import threading
 import uuid
 
-from protocols.base import ProtocolHandler, register
+from protocols.base import ProtocolHandler
 
 # Fake directory listing
 _FAKE_LISTING = (
@@ -25,27 +24,13 @@ _FAKE_LISTING = (
 )
 
 
-@register
 class FTPHandler(ProtocolHandler):
     """FTP honeypot emulating a ProFTPD server."""
 
     PROTOCOL_NAME = "ftp"
 
     def start(self) -> None:
-        sock = self._bind_server()
-        while not self._stop_event.is_set():
-            try:
-                conn, addr = sock.accept()
-            except TimeoutError:
-                continue
-            except OSError:
-                break
-            t = threading.Thread(
-                target=self._handle_client,
-                args=(conn, addr),
-                daemon=True,
-            )
-            t.start()
+        self._accept_loop(self._handle_client)
 
     def _handle_client(self, conn: socket.socket, addr: tuple[str, int]) -> None:
         ip, port = addr

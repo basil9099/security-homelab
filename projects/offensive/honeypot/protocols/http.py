@@ -13,7 +13,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from protocols.base import ProtocolHandler, register
+from protocols.base import ProtocolHandler
 
 # ---------------------------------------------------------------------------
 # Fake HTML responses
@@ -71,7 +71,6 @@ _403_PAGE = """\
 </html>"""
 
 
-@register
 class HTTPHandler(ProtocolHandler):
     """HTTP honeypot emulating an Apache web server."""
 

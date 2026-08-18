@@ -56,9 +56,3 @@ packer-build:
 	@test -n "$$iso_url" || (echo "Set iso_url=... and iso_checksum=sha256:..."; exit 1)
 	cd $(PACKER_DIR) && packer init windows_server_2022.pkr.hcl && \
 		packer build -var "iso_url=$$iso_url" -var "iso_checksum=$$iso_checksum" windows_server_2022.pkr.hcl
-
-.PHONY: lint
-lint:
-	cd $(ANSIBLE_DIR) && ansible-playbook playbooks/site.yml --syntax-check && \
-		ansible-playbook playbooks/smoke.yml --syntax-check
-	cd $(PACKER_DIR) && packer validate windows_server_2022.pkr.hcl || true

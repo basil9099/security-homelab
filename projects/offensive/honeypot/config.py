@@ -20,7 +20,6 @@ class ProtocolConfig:
     enabled: bool = True
     port: int = 0
     banner: str = ""
-    extra: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -91,7 +90,6 @@ class HoneypotConfig:
             existing.enabled = proto_data.get("enabled", existing.enabled)
             existing.port = proto_data.get("port", existing.port)
             existing.banner = proto_data.get("banner", existing.banner)
-            existing.extra = proto_data.get("extra", existing.extra)
             cfg.protocols[name] = existing
 
         # Logging section

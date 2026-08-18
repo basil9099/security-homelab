@@ -9,27 +9,12 @@
 target-version = "py311"
 line-length = 100
 
-# Generated / vendored / non-Python trees that ruff should never touch.
-extend-exclude = [
-    "**/frontend/**",
-    "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-]
-
 [tool.ruff.lint]
 # Pyflakes (F) + a pragmatic slice of pycodestyle (E4/E7/E9), import sorting (I),
 # pyupgrade (UP), and flake8-bugbear (B). E501 (line-too-long) is deliberately
 # left out: line length is handled by the formatter, which does not force-wrap
 # long strings/URLs, so gating on E501 produces noise without value.
 select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
-
-# B008: function calls in argument defaults are idiomatic in FastAPI
-#       (`Depends(...)`, `Query(...)`), which several projects use by design.
-# UP042: rewriting `class X(str, Enum)` to `enum.StrEnum` changes how members
-#        stringify (`str(X.A)` becomes the value, not "X.A"), a behavior change
-#        that would ripple into serialization/formatting — not worth forcing.
-ignore = ["B008", "UP042"]
 
 [tool.ruff.lint.per-file-ignores]
 # `__init__.py` files re-export their package's public API; those imports are
@@ -40,11 +25,11 @@ ignore = ["B008", "UP042"]
 # Ruff's defaults (Black-compatible). Available via pre-commit for contributors.
 
 [tool.pytest.ini_options]
-# Each project owns its own `tests/` directory and a conftest.py that puts the
-# project root on sys.path, so tests are always run from within a project
-# (`cd projects/<area>/<project> && pytest`). This block only sets shared
-# defaults; it does not collect tests across projects (their many identically
-# named modules — main.py, config.py, models.py — would otherwise collide).
+# Each project owns its own `tests/` directory and an empty conftest.py at its
+# root, whose presence puts that root on sys.path, so tests are always run from
+# within a project (`cd projects/<area>/<project> && pytest`). This block only
+# sets shared defaults; it does not collect tests across projects (their many
+# identically named modules — main.py, config.py, models.py — would collide).
 addopts = "-ra"
 python_files = ["test_*.py"]
 python_functions = ["test_*"]

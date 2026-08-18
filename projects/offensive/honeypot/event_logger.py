@@ -1,14 +1,13 @@
 """
-event_logging/event_logger.py
-=============================
-Thread-safe JSON-lines event logger with a queue for the live dashboard.
+event_logger.py
+===============
+Thread-safe JSON-lines event logger with a buffer for the live dashboard.
 """
 
 from __future__ import annotations
 
-import queue
 import threading
-from collections import Counter
+from collections import Counter, deque
 from pathlib import Path
 
 from models import HoneypotEvent
@@ -18,7 +17,7 @@ class EventLogger:
     """Central event pipeline.
 
     * Writes each event as a single JSON line to a ``.jsonl`` file.
-    * Pushes events to a bounded queue consumed by the dashboard.
+    * Buffers events for the dashboard, dropping the oldest once full.
     * Tracks aggregate statistics for the summary panel.
     * Optionally echoes each event to stdout, as JSON or a readable line.
     """
@@ -33,7 +32,7 @@ class EventLogger:
         self._echo_json = echo_json
         self._echo_console = echo_console
         self._lock = threading.Lock()
-        self._event_queue: queue.Queue[HoneypotEvent] = queue.Queue(maxsize=5000)
+        self._pending: deque[HoneypotEvent] = deque(maxlen=5000)
 
         # Running stats
         self._total: int = 0
@@ -45,7 +44,7 @@ class EventLogger:
     # ---- public API -------------------------------------------------------
 
     def log(self, event: HoneypotEvent) -> None:
-        """Write *event* to the JSONL file and push to the dashboard queue."""
+        """Write *event* to the JSONL file and buffer it for the dashboard."""
         line = event.to_json() + "\n"
         with self._lock:
             with open(self._log_path, "a") as fh:
@@ -57,18 +56,8 @@ class EventLogger:
         elif self._echo_console:
             print(self._console_line(event), flush=True)
 
-        # Non-blocking put — drop oldest if full
-        try:
-            self._event_queue.put_nowait(event)
-        except queue.Full:
-            try:
-                self._event_queue.get_nowait()
-            except queue.Empty:
-                pass
-            try:
-                self._event_queue.put_nowait(event)
-            except queue.Full:
-                pass
+        # deque(maxlen=...) evicts the oldest event once full; append is atomic.
+        self._pending.append(event)
 
     def get_stats(self) -> dict:
         """Return current aggregate statistics."""
@@ -86,8 +75,8 @@ class EventLogger:
         events: list[HoneypotEvent] = []
         for _ in range(max_items):
             try:
-                events.append(self._event_queue.get_nowait())
-            except queue.Empty:
+                events.append(self._pending.popleft())
+            except IndexError:
                 break
         return events
 

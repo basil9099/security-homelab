@@ -47,9 +47,10 @@ ruff format .     # auto-format
 
 ## Tests
 
-Tested projects keep their tests in a `tests/` directory with a `conftest.py`
-that puts the project root on `sys.path`, so imports match how the tool runs.
-Run them from within the project:
+Tested projects keep their tests in a `tests/` directory, plus an empty
+`conftest.py` at the project root — its presence is what puts that root on
+`sys.path`, so imports match how the tool runs. Run them from within the
+project:
 
 ```bash
 cd projects/<area>/<project>
@@ -69,7 +70,7 @@ DNS, or socket calls so the suite passes in CI without external services.
 
 To bring a new project under CI:
 
-1. Add a `tests/` directory (with `conftest.py`) and a `requirements-dev.txt`.
+1. Add a `tests/` directory, an empty root `conftest.py`, and a `requirements-dev.txt`.
 2. Add the project's path to the `ruff check` list in the **lint** job.
 3. Add the project's path to the `project` list in the **test** matrix.
 

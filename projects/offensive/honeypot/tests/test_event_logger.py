@@ -2,7 +2,7 @@
 
 import json
 
-from event_logging.event_logger import EventLogger
+from event_logger import EventLogger
 from models import HoneypotEvent
 
 

@@ -1,24 +1,20 @@
 """
 protocols
 =========
-Honeypot protocol handler registry.
-
-Importing this package auto-discovers all built-in handlers so
-they register themselves via the ``@register`` decorator.
+Honeypot protocol handlers, keyed by the name used in config and on the CLI.
 """
 
-# Auto-import built-in handlers to trigger registration.
-from protocols import ftp, http, ssh, telnet
-from protocols.base import (
-    ProtocolHandler,
-    available_protocols,
-    get_handler,
-    register,
-)
+from protocols.base import ProtocolHandler
+from protocols.ftp import FTPHandler
+from protocols.http import HTTPHandler
+from protocols.ssh import SSHHandler
+from protocols.telnet import TelnetHandler
 
-__all__ = [
-    "ProtocolHandler",
-    "register",
-    "get_handler",
-    "available_protocols",
-]
+HANDLERS: dict[str, type[ProtocolHandler]] = {
+    "ssh": SSHHandler,
+    "http": HTTPHandler,
+    "ftp": FTPHandler,
+    "telnet": TelnetHandler,
+}
+
+__all__ = ["HANDLERS", "ProtocolHandler"]

@@ -15,7 +15,7 @@ import threading
 import time
 from collections import deque
 
-from event_logging.event_logger import EventLogger
+from event_logger import EventLogger
 from models import HoneypotEvent
 from rich.console import Console
 from rich.layout import Layout

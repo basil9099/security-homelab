@@ -45,13 +45,12 @@ honeypot/
 ├── honeypot.yaml            # Default configuration
 ├── requirements.txt         # Python dependencies
 ├── protocols/
-│   ├── base.py              # Abstract handler base + registry
+│   ├── base.py              # Abstract handler base + shared fake shell
 │   ├── ssh.py               # SSH honeypot (paramiko)
 │   ├── http.py              # HTTP honeypot (fake Apache)
 │   ├── ftp.py               # FTP honeypot (state machine)
 │   └── telnet.py            # Telnet honeypot (fake shell)
-├── event_logging/
-│   └── event_logger.py      # Thread-safe JSONL logger
+├── event_logger.py          # Thread-safe JSONL logger
 ├── dashboard/
 │   └── live.py              # Rich terminal dashboard
 └── demo/
@@ -132,16 +131,18 @@ Generate realistic simulated attack traffic without real attackers:
 Adding a new protocol handler is a single-file operation:
 
 ```python
-from protocols.base import ProtocolHandler, register
+# protocols/myproto.py
+from protocols.base import ProtocolHandler
 
-@register
+
 class MyProtocolHandler(ProtocolHandler):
     PROTOCOL_NAME = "myproto"
 
     def start(self) -> None:
-        # Your listener implementation
-        ...
+        self._accept_loop(self._handle_client)
 ```
+
+Then add it to the `HANDLERS` map in `protocols/__init__.py`.
 
 ---
 
@@ -233,7 +234,6 @@ sudo iptables -t nat -A PREROUTING -p tcp --dport 23 -j REDIRECT --to-port 2323
 - **paramiko** - SSH protocol emulation
 - **rich** - Terminal dashboard rendering
 - **pyyaml** - Configuration file parsing
-- **colorama** - Cross-platform colored output
 
 ---
 
