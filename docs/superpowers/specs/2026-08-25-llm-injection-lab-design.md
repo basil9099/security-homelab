@@ -59,7 +59,7 @@ These are the project's good ideas and the redesign preserves them:
 
 ## Repository structure
 
-Local path: `C:\Users\angus\llm-injection-lab`. Fresh `git init`.
+Local path: `C:\Users\angus\projects\llm-injection-lab`. Fresh `git init`.
 
 ```
 llm-injection-lab/

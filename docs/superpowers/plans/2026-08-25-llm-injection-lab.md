@@ -4,7 +4,7 @@
 
 **Goal:** Extract the LLM prompt-injection red-team framework from the security-homelab monorepo into a standalone, installable repository with real-model findings.
 
-**Architecture:** Port bottom-up from `projects/offensive/llm_red_team/` into `C:\Users\angus\llm-injection-lab` as a `src/llmlab/` package with four subpackages (`target`, `engines`, `analysis`, `report`). Tasks 2–7 are pure moves plus import rewrites with no behaviour changes, so the existing test suite is the safety net. Tasks 8–11 add the only new logic and are written test-first. Tasks 12–14 produce the evidence and clean up.
+**Architecture:** Port bottom-up from `projects/offensive/llm_red_team/` into `C:\Users\angus\projects\llm-injection-lab` as a `src/llmlab/` package with four subpackages (`target`, `engines`, `analysis`, `report`). Tasks 2–7 are pure moves plus import rewrites with no behaviour changes, so the existing test suite is the safety net. Tasks 8–11 add the only new logic and are written test-first. Tasks 12–14 produce the evidence and clean up.
 
 **Tech Stack:** Python 3.12, FastAPI, uvicorn, pydantic, requests, PyYAML, rich, pytest, ruff, NVIDIA garak (optional extra), Ollama.
 
@@ -69,17 +69,17 @@ No commit. Report the pass count and ruff status.
 ### Task 1: Scaffold the new repository
 
 **Files:**
-- Create: `C:\Users\angus\llm-injection-lab\pyproject.toml`
-- Create: `C:\Users\angus\llm-injection-lab\.gitignore`
-- Create: `C:\Users\angus\llm-injection-lab\LICENSE`
-- Create: `C:\Users\angus\llm-injection-lab\.github\workflows\ci.yml`
-- Create: `C:\Users\angus\llm-injection-lab\src\llmlab\__init__.py`
-- Create: `C:\Users\angus\llm-injection-lab\src\llmlab\config.py`
-- Create: `C:\Users\angus\llm-injection-lab\src\llmlab\target\__init__.py`
-- Create: `C:\Users\angus\llm-injection-lab\src\llmlab\engines\__init__.py`
-- Create: `C:\Users\angus\llm-injection-lab\src\llmlab\analysis\__init__.py`
-- Create: `C:\Users\angus\llm-injection-lab\src\llmlab\report\__init__.py`
-- Test: `C:\Users\angus\llm-injection-lab\tests\test_packaging.py`
+- Create: `C:\Users\angus\projects\llm-injection-lab\pyproject.toml`
+- Create: `C:\Users\angus\projects\llm-injection-lab\.gitignore`
+- Create: `C:\Users\angus\projects\llm-injection-lab\LICENSE`
+- Create: `C:\Users\angus\projects\llm-injection-lab\.github\workflows\ci.yml`
+- Create: `C:\Users\angus\projects\llm-injection-lab\src\llmlab\__init__.py`
+- Create: `C:\Users\angus\projects\llm-injection-lab\src\llmlab\config.py`
+- Create: `C:\Users\angus\projects\llm-injection-lab\src\llmlab\target\__init__.py`
+- Create: `C:\Users\angus\projects\llm-injection-lab\src\llmlab\engines\__init__.py`
+- Create: `C:\Users\angus\projects\llm-injection-lab\src\llmlab\analysis\__init__.py`
+- Create: `C:\Users\angus\projects\llm-injection-lab\src\llmlab\report\__init__.py`
+- Test: `C:\Users\angus\projects\llm-injection-lab\tests\test_packaging.py`
 
 **Interfaces:**
 - Produces: `llmlab.__version__` (str); `llmlab.config` with `TIERS`, `BACKENDS`, `SUITES`, `CORPUS_DIR`, `MAPPINGS_FILE`, `RUNS_DIR`, `canary_token()`, `resolve_suite()`.
@@ -87,7 +87,7 @@ No commit. Report the pass count and ruff status.
 - [ ] **Step 1: Create the directory and initialise git**
 
 ```bash
-mkdir -p /c/Users/angus/llm-injection-lab/src/llmlab/{target,engines,analysis,report} /c/Users/angus/llm-injection-lab/tests/fixtures /c/Users/angus/llm-injection-lab/.github/workflows /c/Users/angus/llm-injection-lab/screenshots && cd /c/Users/angus/llm-injection-lab && git init
+mkdir -p /c/Users/angus/projects/llm-injection-lab/src/llmlab/{target,engines,analysis,report} /c/Users/angus/projects/llm-injection-lab/tests/fixtures /c/Users/angus/projects/llm-injection-lab/.github/workflows /c/Users/angus/projects/llm-injection-lab/screenshots && cd /c/Users/angus/projects/llm-injection-lab && git init
 ```
 
 - [ ] **Step 2: Write `pyproject.toml`**
@@ -163,7 +163,7 @@ runs/
 - [ ] **Step 4: Copy the MIT licence across**
 
 ```bash
-cp /c/Users/angus/security-homelab/LICENSE /c/Users/angus/llm-injection-lab/LICENSE
+cp /c/Users/angus/security-homelab/LICENSE /c/Users/angus/projects/llm-injection-lab/LICENSE
 ```
 
 - [ ] **Step 5: Write `.github/workflows/ci.yml`**
@@ -204,7 +204,7 @@ __version__ = "0.1.0"
 - [ ] **Step 7: Write the four empty subpackage `__init__.py` files**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab && for pkg in target engines analysis report; do printf '' > "$pkg/__init__.py"; done
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab && for pkg in target engines analysis report; do printf '' > "$pkg/__init__.py"; done
 ```
 
 - [ ] **Step 8: Port `config.py` with corrected paths**
@@ -273,7 +273,7 @@ def test_runs_dir_is_not_inside_the_package():
 - [ ] **Step 10: Create a venv and install the package editable**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && python -m venv .venv && .venv/Scripts/python.exe -m pip install -e ".[dev]"
+cd /c/Users/angus/projects/llm-injection-lab && python -m venv .venv && .venv/Scripts/python.exe -m pip install -e ".[dev]"
 ```
 
 Expected: install succeeds.
@@ -281,7 +281,7 @@ Expected: install succeeds.
 - [ ] **Step 11: Run the packaging test**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_packaging.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_packaging.py -v
 ```
 
 Expected: `test_version_is_exposed` and `test_runs_dir_is_not_inside_the_package` PASS. The two data-file tests FAIL — the corpus and mappings arrive in Tasks 2 and 5. This is the expected intermediate state; note it and move on.
@@ -293,7 +293,7 @@ A caveat worth knowing: an editable install exercises the `importlib.resources` 
 Report that the scaffold is ready. **Ask the owner whether to create the GitHub remote now and at what visibility** — do not create it unprompted. Commands for the owner:
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Scaffold llm-injection-lab package"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Scaffold llm-injection-lab package"
 ```
 
 ---
@@ -312,19 +312,19 @@ cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Scaffold llm
 - [ ] **Step 1: Copy the five modules and the corpus**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/llm-injection-lab && cp $OLD/target/{app,backends,tiers,defenses,tools}.py $NEW/src/llmlab/target/ && cp -r $OLD/target/corpus $NEW/src/llmlab/target/corpus
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/target/{app,backends,tiers,defenses,tools}.py $NEW/src/llmlab/target/ && cp -r $OLD/target/corpus $NEW/src/llmlab/target/corpus
 ```
 
 - [ ] **Step 2: Rewrite the imports in the copied modules**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/target && sed -i 's/^import config$/from llmlab import config/; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./' *.py
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/target && sed -i 's/^import config$/from llmlab import config/; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./' *.py
 ```
 
 - [ ] **Step 3: Verify no stale imports remain**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/target && grep -n "^import config\|^from target\|^from modules" *.py || echo "clean"
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/target && grep -n "^import config\|^from target\|^from modules" *.py || echo "clean"
 ```
 
 Expected: `clean`.
@@ -332,7 +332,7 @@ Expected: `clean`.
 - [ ] **Step 4: Copy the two test files and rewrite their imports**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/llm-injection-lab && cp $OLD/tests/{test_target.py,test_defenses.py} $NEW/tests/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./; s/^from modules import /from llmlab.engines import /; s/^from modules\./from llmlab.engines./' test_target.py test_defenses.py
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/tests/{test_target.py,test_defenses.py} $NEW/tests/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./; s/^from modules import /from llmlab.engines import /; s/^from modules\./from llmlab.engines./' test_target.py test_defenses.py
 ```
 
 Note: `tests/conftest.py` is **not** copied. The `sys.path` hack it existed for is gone.
@@ -340,7 +340,7 @@ Note: `tests/conftest.py` is **not** copied. The `sys.path` hack it existed for 
 - [ ] **Step 5: Run the target tests**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_target.py tests/test_defenses.py tests/test_packaging.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_target.py tests/test_defenses.py tests/test_packaging.py -v
 ```
 
 Expected: all PASS, including `test_corpus_dir_resolves_to_a_real_directory` which was failing in Task 1. If an import error names `modules`, a test still references the engines layer — note which, and defer that specific test to Task 3 with an `xfail` marker rather than editing the assertion.
@@ -348,13 +348,13 @@ Expected: all PASS, including `test_corpus_dir_resolves_to_a_real_directory` whi
 - [ ] **Step 6: Lint**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 - [ ] **Step 7: Report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Port target application and corpus"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Port target application and corpus"
 ```
 
 ---
@@ -374,19 +374,19 @@ cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Port target 
 - [ ] **Step 1: Copy the four modules under their new names**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/llm-injection-lab && cp $OLD/modules/garak_runner.py $NEW/src/llmlab/engines/garak.py && cp $OLD/modules/native_runner.py $NEW/src/llmlab/engines/native.py && cp $OLD/modules/probes.py $OLD/modules/detectors.py $NEW/src/llmlab/engines/
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/modules/garak_runner.py $NEW/src/llmlab/engines/garak.py && cp $OLD/modules/native_runner.py $NEW/src/llmlab/engines/native.py && cp $OLD/modules/probes.py $OLD/modules/detectors.py $NEW/src/llmlab/engines/
 ```
 
 - [ ] **Step 2: Rewrite imports across the engines package**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/engines && sed -i 's/^import config$/from llmlab import config/; s/^from modules import garak_runner/from llmlab.engines import garak/; s/^from modules import native_runner/from llmlab.engines import native/; s/^from modules import /from llmlab.engines import /; s/^from modules\.garak_runner import /from llmlab.engines.garak import /; s/^from modules\.native_runner import /from llmlab.engines.native import /; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules\./from llmlab.engines./; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./' *.py
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/engines && sed -i 's/^import config$/from llmlab import config/; s/^from modules import garak_runner/from llmlab.engines import garak/; s/^from modules import native_runner/from llmlab.engines import native/; s/^from modules import /from llmlab.engines import /; s/^from modules\.garak_runner import /from llmlab.engines.garak import /; s/^from modules\.native_runner import /from llmlab.engines.native import /; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules\./from llmlab.engines./; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./' *.py
 ```
 
 - [ ] **Step 3: Check for stale references, including in docstrings**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/engines && grep -n "modules\.\|modules/\|garak_runner\|native_runner" *.py || echo "clean"
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/engines && grep -n "modules\.\|modules/\|garak_runner\|native_runner" *.py || echo "clean"
 ```
 
 Any hit inside a docstring is a **documentation** fix: `modules/probes.py` becomes `llmlab/engines/probes.py`, `:mod:\`modules.detectors\`` becomes `:mod:\`llmlab.engines.detectors\``. Fix each by hand — these are the stale-path comments the old repo already had a history of.
@@ -394,7 +394,7 @@ Any hit inside a docstring is a **documentation** fix: `modules/probes.py` becom
 - [ ] **Step 4: Copy the engine tests and fixtures**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/llm-injection-lab && cp $OLD/tests/test_engines.py $NEW/tests/ && cp $OLD/tests/fixtures/*.jsonl $NEW/tests/fixtures/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from modules import garak_runner/from llmlab.engines import garak as garak_runner/; s/^from modules import native_runner/from llmlab.engines import native as native_runner/; s/^from modules import /from llmlab.engines import /; s/^from modules\.garak_runner import /from llmlab.engines.garak import /; s/^from modules\.native_runner import /from llmlab.engines.native import /; s/^from modules\./from llmlab.engines./; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./' test_engines.py
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/tests/test_engines.py $NEW/tests/ && cp $OLD/tests/fixtures/*.jsonl $NEW/tests/fixtures/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from modules import garak_runner/from llmlab.engines import garak as garak_runner/; s/^from modules import native_runner/from llmlab.engines import native as native_runner/; s/^from modules import /from llmlab.engines import /; s/^from modules\.garak_runner import /from llmlab.engines.garak import /; s/^from modules\.native_runner import /from llmlab.engines.native import /; s/^from modules\./from llmlab.engines./; s/^from target import /from llmlab.target import /; s/^from target\./from llmlab.target./' test_engines.py
 ```
 
 The `as garak_runner` aliases keep the body of the test file unchanged, so this step stays a pure move.
@@ -402,7 +402,7 @@ The `as garak_runner` aliases keep the body of the test file unchanged, so this 
 - [ ] **Step 5: Run the engine tests**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_engines.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_engines.py -v
 ```
 
 Expected: all PASS, including `TestDefenceGradient` which still lives in this file. It moves in Task 4.
@@ -410,11 +410,11 @@ Expected: all PASS, including `TestDefenceGradient` which still lives in this fi
 - [ ] **Step 6: Lint and report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Port probe engines"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Port probe engines"
 ```
 
 ---
@@ -430,7 +430,7 @@ cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Port probe e
 - [ ] **Step 1: Read the class to be moved**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && sed -n '355,418p' tests/test_engines.py
+cd /c/Users/angus/projects/llm-injection-lab && sed -n '355,418p' tests/test_engines.py
 ```
 
 Note the exact line the class starts at and any imports it alone uses.
@@ -461,7 +461,7 @@ Delete the `TestDefenceGradient` class from `tests/test_engines.py`, and remove 
 - [ ] **Step 4: Run both files and confirm the total count is unchanged**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_engines.py tests/test_defence_pipeline.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_engines.py tests/test_defence_pipeline.py -v
 ```
 
 Expected: PASS, and the combined test count equals the count `test_engines.py` had alone in Task 3. A drop means a test was lost in the move.
@@ -469,11 +469,11 @@ Expected: PASS, and the combined test count equals the count `test_engines.py` h
 - [ ] **Step 5: Lint and report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Extract defence-pipeline regression test and state what it is not"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Extract defence-pipeline regression test and state what it is not"
 ```
 
 ---
@@ -491,19 +491,19 @@ cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Extract defe
 - [ ] **Step 1: Copy the three modules and the YAML table**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/llm-injection-lab && cp $OLD/modules/{parser,scoring,mapping}.py $OLD/modules/mappings.yaml $NEW/src/llmlab/analysis/
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/modules/{parser,scoring,mapping}.py $OLD/modules/mappings.yaml $NEW/src/llmlab/analysis/
 ```
 
 - [ ] **Step 2: Rewrite imports**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/analysis && sed -i 's/^import config$/from llmlab import config/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' *.py
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/analysis && sed -i 's/^import config$/from llmlab import config/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' *.py
 ```
 
 - [ ] **Step 3: Check for stale references**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/analysis && grep -n "modules\.\|modules/" *.py || echo "clean"
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/analysis && grep -n "modules\.\|modules/" *.py || echo "clean"
 ```
 
 Fix docstring paths by hand: `modules/mappings.yaml` becomes `llmlab/analysis/mappings.yaml`.
@@ -511,7 +511,7 @@ Fix docstring paths by hand: `modules/mappings.yaml` becomes `llmlab/analysis/ma
 - [ ] **Step 4: Confirm the mappings file now resolves**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_packaging.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_packaging.py -v
 ```
 
 Expected: all four packaging tests PASS now, including `test_mappings_file_resolves_to_a_real_file`.
@@ -519,13 +519,13 @@ Expected: all four packaging tests PASS now, including `test_mappings_file_resol
 - [ ] **Step 5: Copy `test_analysis.py` and rewrite imports**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/llm-injection-lab && cp $OLD/tests/test_analysis.py $NEW/tests/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from modules import reporter/from llmlab.report import profile as reporter/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' test_analysis.py
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/tests/test_analysis.py $NEW/tests/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from modules import reporter/from llmlab.report import profile as reporter/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' test_analysis.py
 ```
 
 - [ ] **Step 6: Run, expecting reporter tests to fail**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_analysis.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_analysis.py -v
 ```
 
 Expected: parser, scoring and mapping tests PASS. Any test touching `reporter` FAILS with an import or attribute error — the report layer arrives in Task 6. **Record exactly which tests fail**; Task 6 must turn all of them green.
@@ -533,7 +533,7 @@ Expected: parser, scoring and mapping tests PASS. Any test touching `reporter` F
 - [ ] **Step 7: Report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Port analysis layer"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Port analysis layer"
 ```
 
 ---
@@ -570,7 +570,7 @@ Move the module docstring, the imports, `build_profile`, `_tier_block`, `_matrix
 Move `render_markdown` verbatim. It consumes only the `profile` dict, so its imports are whatever it uses directly — check with `grep -n "_pct\|_clip" ` on the moved body and import those from `llmlab.report.profile` if referenced:
 
 ```bash
-cd /c/Users/angus/llm-injection-lab/src/llmlab/report && grep -n "_pct\|_clip\|_matrix\|_evidence" markdown.py html.py
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/report && grep -n "_pct\|_clip\|_matrix\|_evidence" markdown.py html.py
 ```
 
 Any hit means that helper must be imported from `.profile`.
@@ -604,7 +604,7 @@ Move every test recorded as failing in Task 5 Step 6 out of `tests/test_analysis
 - [ ] **Step 7: Run the full suite so far**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -v
 ```
 
 Expected: everything PASSES. The combined count across `test_analysis.py` and `test_report.py` must equal the Task 5 count for `test_analysis.py` alone.
@@ -612,11 +612,11 @@ Expected: everything PASSES. The combined count across `test_analysis.py` and `t
 - [ ] **Step 8: Lint and report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Split reporter into report package"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Split reporter into report package"
 ```
 
 ---
@@ -641,7 +641,7 @@ Note the rename: the private `_scan_tier` and `_print_summary` become public `sc
 - [ ] **Step 1: Copy `main.py` as the basis for the three files**
 
 ```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && cp $OLD/main.py /c/Users/angus/llm-injection-lab/src/llmlab/cli.py
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && cp $OLD/main.py /c/Users/angus/projects/llm-injection-lab/src/llmlab/cli.py
 ```
 
 - [ ] **Step 2: Move the orchestration functions into `runner.py`**
@@ -717,7 +717,7 @@ def test_unknown_suite_is_rejected():
 - [ ] **Step 7: Run it**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_cli.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_cli.py -v
 ```
 
 Expected: PASS. If `test_unknown_suite_is_rejected` fails because `resolve_suite` raises `ValueError` rather than exiting, adjust the test to `pytest.raises(ValueError)` — match the existing behaviour rather than changing it, since this task is a move.
@@ -725,7 +725,7 @@ Expected: PASS. If `test_unknown_suite_is_rejected` fails because `resolve_suite
 - [ ] **Step 8: Verify the console script works**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe --help && .venv/Scripts/llmlab.exe list suites && .venv/Scripts/llmlab.exe list probes
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe --help && .venv/Scripts/llmlab.exe list suites && .venv/Scripts/llmlab.exe list probes
 ```
 
 Expected: all three produce output and exit 0.
@@ -733,7 +733,7 @@ Expected: all three produce output and exit 0.
 - [ ] **Step 9: Run the whole suite and lint**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 Expected: the pass count now meets or exceeds the Task 0 baseline (it will exceed it, by the packaging and CLI tests added along the way). **This is the gate that says the migration preserved behaviour.**
@@ -741,7 +741,7 @@ Expected: the pass count now meets or exceeds the Task 0 baseline (it will excee
 - [ ] **Step 10: Report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Split CLI into cli, runner and console modules"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Split CLI into cli, runner and console modules"
 ```
 
 ---
@@ -760,7 +760,7 @@ First task with new logic — written test-first. The garak probe names in the s
 - [ ] **Step 1: Install garak**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pip install -e ".[scan]"
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pip install -e ".[scan]"
 ```
 
 This pulls torch and is slow — expect several minutes and a large download. It is needed only to verify probe names.
@@ -768,7 +768,7 @@ This pulls torch and is slow — expect several minutes and a large download. It
 - [ ] **Step 2: List the real probe names**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m garak --list_probes 2>&1 | grep -iE "latentinjection|promptinject|dan\.|encoding\.InjectBase64|xss|web_injection|suffix"
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m garak --list_probes 2>&1 | grep -iE "latentinjection|promptinject|dan\.|encoding\.InjectBase64|xss|web_injection|suffix"
 ```
 
 **Record the exact names that exist.** The spec's guesses — `dan.DanInTheWildMini`, `promptinject.*Mini`, `encoding.InjectBase64`, `xss.MarkdownImageExfil`, `suffix.GCGCached` — must each be confirmed or replaced with the real equivalent. Note that `xss` was renamed `web_injection` in garak 0.16, which `config.SUITES["leakage"]` already comments on.
@@ -820,7 +820,7 @@ def test_existing_suites_are_untouched(name):
 - [ ] **Step 4: Run to verify it fails**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_suites.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_suites.py -v
 ```
 
 Expected: FAIL — `"headline" in config.SUITES` is False.
@@ -850,7 +850,7 @@ Insert into the `SUITES` dict, **before** the `SUITES["full"] = ...` line so `fu
 - [ ] **Step 6: Run the test again**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_suites.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_suites.py -v
 ```
 
 Expected: PASS.
@@ -858,7 +858,7 @@ Expected: PASS.
 - [ ] **Step 7: Dry-run the suite to confirm garak accepts every name**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe scan --all-tiers --suite headline --dry-run
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe scan --all-tiers --suite headline --dry-run
 ```
 
 Expected: prints the garak commands without sending anything. Any family garak does not recognise is reported as skipped-with-a-reason rather than a crash — if one is skipped, go back to Step 2 and correct the name.
@@ -866,7 +866,7 @@ Expected: prints the garak commands without sending anything. Any family garak d
 - [ ] **Step 8: Report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Add curated headline suite"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Add curated headline suite"
 ```
 
 ---
@@ -911,7 +911,7 @@ def test_native_generations_is_overridable():
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_suites.py -v -k generations
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_suites.py -v -k generations
 ```
 
 Expected: FAIL — `GARAK_GENERATIONS` is currently 3 and `NATIVE_GENERATIONS` does not exist.
@@ -954,7 +954,7 @@ In `_run_native`, change the generations argument passed through from `args.gene
 - [ ] **Step 6: Run the tests**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q
 ```
 
 Expected: PASS.
@@ -966,7 +966,7 @@ In `src/llmlab/report/markdown.py`, the defence-matrix cells currently render a 
 - [ ] **Step 8: Run the report tests**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_report.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_report.py -v
 ```
 
 If a test asserts on the old bare-percentage cell text, update that assertion to the new format — this is an intended output change, not a regression.
@@ -974,11 +974,11 @@ If a test asserts on the old bare-percentage cell text, update that assertion to
 - [ ] **Step 9: Lint and report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Split generations per engine and show hit counts in the matrix"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Split generations per engine and show hit counts in the matrix"
 ```
 
 ---
@@ -1055,7 +1055,7 @@ def test_ollama_backend_omits_seed_when_unset(monkeypatch):
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_target.py -v -k ollama
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_target.py -v -k ollama
 ```
 
 Expected: FAIL with `KeyError: 'options'`.
@@ -1115,7 +1115,7 @@ In `runner.py`, `build_target_app` gains a `seed: int | None = None` parameter a
 - [ ] **Step 7: Run the tests**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q
 ```
 
 Expected: PASS.
@@ -1123,11 +1123,11 @@ Expected: PASS.
 - [ ] **Step 8: Lint and report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Pin ollama temperature and seed for reproducible runs"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Pin ollama temperature and seed for reproducible runs"
 ```
 
 ---
@@ -1211,7 +1211,7 @@ def test_finish_records_duration(tmp_path):
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_manifest.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_manifest.py -v
 ```
 
 Expected: FAIL with `ModuleNotFoundError: No module named 'llmlab.manifest'`.
@@ -1319,7 +1319,7 @@ def ollama_digest(model: str, url: str) -> str | None:
 - [ ] **Step 4: Run the tests**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_manifest.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_manifest.py -v
 ```
 
 Expected: PASS.
@@ -1388,13 +1388,13 @@ When no manifest is present, render nothing — old run directories must still a
 - [ ] **Step 7: Verify with an offline scan**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe scan --all-tiers --suite quick --backend mock --no-garak
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe scan --all-tiers --suite quick --backend mock --no-garak
 ```
 
 Then confirm the manifest landed:
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && cat runs/*/manifest.json
+cd /c/Users/angus/projects/llm-injection-lab && cat runs/*/manifest.json
 ```
 
 Expected: valid JSON with every field populated (`model` and `model_digest` will be null for the mock backend, which is correct).
@@ -1402,11 +1402,11 @@ Expected: valid JSON with every field populated (`model` and `model_digest` will
 - [ ] **Step 8: Full suite, lint, report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Record a manifest for every run"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Record a manifest for every run"
 ```
 
 ---
@@ -1439,7 +1439,7 @@ ollama pull llama3.2
 - [ ] **Step 3: Time a single tier before committing to all three**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe scan --tier naive --suite headline --backend ollama
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe scan --tier naive --suite headline --backend ollama
 ```
 
 **Record the wall-clock from the manifest.** If one tier takes materially longer than ~20 minutes, stop and report to the owner before running all three — the suite needs narrowing rather than a surprise overnight run.
@@ -1447,13 +1447,13 @@ cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe scan --tier naiv
 - [ ] **Step 4: Run the full comparison**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe scan --all-tiers --suite headline --backend ollama --format all
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe scan --all-tiers --suite headline --backend ollama --format all
 ```
 
 - [ ] **Step 5: Read the results**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && cat runs/*/manifest.json && ls runs/*/
+cd /c/Users/angus/projects/llm-injection-lab && cat runs/*/manifest.json && ls runs/*/
 ```
 
 Record the macro ASR, pooled ASR and utility per tier, and the full defence matrix. **Report the numbers as they came out.** If a headline claim from the old FINDINGS did not survive, that is the finding — do not re-run with different settings to recover it.
@@ -1465,7 +1465,7 @@ Open the generated HTML report and capture the defence-matrix section as `screen
 - [ ] **Step 7: Report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add screenshots && git commit -m "Add report screenshots from the real headline run"
+cd /c/Users/angus/projects/llm-injection-lab && git add screenshots && git commit -m "Add report screenshots from the real headline run"
 ```
 
 ---
@@ -1504,7 +1504,7 @@ Replace the old `modules/` tree with the `src/llmlab/` structure from this plan.
 - [ ] **Step 4: Check every command in the README actually runs**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/llmlab.exe list suites && .venv/Scripts/llmlab.exe list probes && .venv/Scripts/llmlab.exe list mappings && .venv/Scripts/llmlab.exe --help
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe list suites && .venv/Scripts/llmlab.exe list probes && .venv/Scripts/llmlab.exe list mappings && .venv/Scripts/llmlab.exe --help
 ```
 
 Every command block in the README must be executed and confirmed. A portfolio README with a command that errors is worse than one without the command.
@@ -1512,7 +1512,7 @@ Every command block in the README must be executed and confirmed. A portfolio RE
 - [ ] **Step 5: Report for commit**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && git add -A && git commit -m "Rewrite README and FINDINGS against the real headline run"
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Rewrite README and FINDINGS against the real headline run"
 ```
 
 ---
@@ -1528,7 +1528,7 @@ Last, and only once the new repo is green with real findings recorded.
 - [ ] **Step 1: Confirm the new repo stands on its own**
 
 ```bash
-cd /c/Users/angus/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check .
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check .
 ```
 
 Expected: green. Do not proceed otherwise.
