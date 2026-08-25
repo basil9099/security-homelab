@@ -12,10 +12,11 @@
 
 ## Global Constraints
 
-- **The repository owner performs all `git commit` and `git push` commands.** Never run them. Each task ends by reporting what is staged and printing the command for the owner to run.
-- **Creating the GitHub remote and the first push require explicit confirmation from the owner**, including repository visibility (public or private).
+- **Commit locally in `C:\Users\angus\projects\llm-injection-lab` at the end of each task**, using the commit message the task gives. This repo has no remote and its history stays rewritable, so the owner reviews and may squash before the first push.
+- **Never run `git push`.** Never create a remote. Both require the owner's explicit say-so.
+- **Never commit in the `security-homelab` repo.** The owner commits the spec, plan, and the Task 14 cleanup there themselves. Tasks touching that repo stage changes and report; they do not commit.
 - Target Python: **3.12**. Package name `llmlab`, distribution name `llm-injection-lab`, console script `llmlab`.
-- Ruff config, copied verbatim from the monorepo root: `target-version = "py311"`, `line-length = 100`, `select = ["E4", "E7", "E9", "F", "I", "UP", "B"]`, per-file-ignores `"**/__init__.py" = ["F401"]`. `E501` is deliberately excluded.
+- Ruff config, carried over from the monorepo root: `line-length = 100`, `select = ["E4", "E7", "E9", "F", "I", "UP", "B"]`, per-file-ignores `"**/__init__.py" = ["F401"]`. `E501` is deliberately excluded. **`target-version = "py312"`** — the monorepo said `py311`, but this repo declares `requires-python = ">=3.12"` and the two must agree.
 - Pinned dependency versions, copied verbatim from `requirements.txt`: `fastapi==0.115.6`, `uvicorn==0.34.0`, `pydantic==2.10.4`, `requests==2.32.3`, `httpx==0.28.1`, `PyYAML==6.0.2`, `rich==13.9.4`. Dev: `pytest>=8.0.0`, `ruff>=0.8.0`. Scan extra: `garak>=0.10.0`.
 - **All imports become absolute `llmlab.*`.** No `sys.path` manipulation. `tests/conftest.py` from the old repo is deleted, not ported.
 - The test suite stays **network-free**: no test may require Ollama or garak.
@@ -129,7 +130,7 @@ where = ["src"]
 llmlab = ["target/corpus/**/*.md", "analysis/*.yaml"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 100
 
 [tool.ruff.lint]
@@ -351,7 +352,7 @@ Expected: all PASS, including `test_corpus_dir_resolves_to_a_real_directory` whi
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
 ```
 
-- [ ] **Step 7: Report for commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Port target application and corpus"
@@ -407,7 +408,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pyte
 
 Expected: all PASS, including `TestDefenceGradient` which still lives in this file. It moves in Task 4.
 
-- [ ] **Step 6: Lint and report for commit**
+- [ ] **Step 6: Lint and commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
@@ -466,7 +467,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pyte
 
 Expected: PASS, and the combined test count equals the count `test_engines.py` had alone in Task 3. A drop means a test was lost in the move.
 
-- [ ] **Step 5: Lint and report for commit**
+- [ ] **Step 5: Lint and commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
@@ -486,7 +487,9 @@ cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Ext
 
 **Interfaces:**
 - Consumes: `llmlab.config`.
-- Produces: `llmlab.analysis.parser.parse_report(path, tier="", engine="")`, `parse_run_dir(run_dir) -> list[Report]`, `family_of(classname)`, dataclasses `Finding`, `EvalRow`, `Report`; `llmlab.analysis.scoring.score_reports(reports) -> dict[str, TierScore]`, `defence_deltas(tiers, baseline) -> dict[str, TierDelta]`, `top_findings(reports, limit=10)`, dataclasses `FamilyScore`, `TierScore`, `TierDelta`; `llmlab.analysis.mapping.FamilyMapping`, `SEVERITY_ORDER`.
+- Produces: `llmlab.analysis.parser.parse_report(path, tier="", engine="")`, `parse_run_dir(run_dir) -> list[Report]`, `family_of(classname)`, dataclasses `Finding`, `EvalRow`, `Report`; `llmlab.analysis.scoring.score_reports(reports) -> dict[str, TierScore]`, `defence_deltas(tiers, baseline) -> dict[str, TierDelta]`, `top_findings(reports, limit=10)`, `UTILITY_FAMILY`, dataclasses `FamilyScore`, `TierScore`, `TierDelta`; `llmlab.analysis.mapping.FamilyMapping`, `SEVERITY_ORDER`.
+
+Also produces `tests/test_report.py` — the reporter tests, moved here but not passing until Task 6.
 
 - [ ] **Step 1: Copy the three modules and the YAML table**
 
@@ -518,19 +521,46 @@ Expected: all four packaging tests PASS now, including `test_mappings_file_resol
 
 - [ ] **Step 5: Copy `test_analysis.py` and rewrite imports**
 
-```bash
-OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/tests/test_analysis.py $NEW/tests/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from modules import reporter/from llmlab.report import profile as reporter/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' test_analysis.py
-```
-
-- [ ] **Step 6: Run, expecting reporter tests to fail**
+`tests/test_analysis.py:8` in the old repo reads `from modules import mapping, reporter` — a **top-level** import. Rewriting it to point at `llmlab.report`, which does not exist until Task 6, would raise a *collection* error and fail the whole file rather than just its six reporter tests. So the reporter tests are split out here, in this task, and Task 6 makes them pass.
 
 ```bash
-cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_analysis.py -v
+OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Users/angus/projects/llm-injection-lab && cp $OLD/tests/test_analysis.py $NEW/tests/ && cd $NEW/tests && sed -i 's/^import config$/from llmlab import config/; s/^from modules import mapping, reporter/from llmlab.analysis import mapping/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' test_analysis.py
 ```
 
-Expected: parser, scoring and mapping tests PASS. Any test touching `reporter` FAILS with an import or attribute error — the report layer arrives in Task 6. **Record exactly which tests fail**; Task 6 must turn all of them green.
+Note the reporter import is **dropped**, not rewritten.
 
-- [ ] **Step 7: Report for commit**
+- [ ] **Step 6: Move the six reporter tests into `tests/test_report.py`**
+
+Find them:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && grep -n "reporter" tests/test_analysis.py
+```
+
+Cut every test function that references `reporter` out of `tests/test_analysis.py` and into a new `tests/test_report.py`, changing only their imports. The new file starts:
+
+```python
+"""Report rendering: profile structure, Markdown and HTML output."""
+
+import json
+from pathlib import Path
+
+import pytest
+
+from llmlab import config, report
+```
+
+and every `reporter.` in the moved bodies becomes `report.`. Do not change any assertion — this is a move.
+
+- [ ] **Step 7: Run, with the not-yet-existing report package excluded**
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests --ignore=tests/test_report.py -q
+```
+
+Expected: **green**. `tests/test_report.py` cannot import until Task 6 builds the package, which is why it is ignored here; Task 6 drops the `--ignore` and gates on the full suite. Record the pass count.
+
+- [ ] **Step 8: Commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Port analysis layer"
@@ -547,7 +577,7 @@ cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Por
 - Create: `src/llmlab/report/markdown.py` — `render_markdown(profile) -> str`
 - Create: `src/llmlab/report/html.py` — `render_html(profile) -> str`
 - Modify: `src/llmlab/report/__init__.py` — re-export the public API and host `write_reports`
-- Test: `tests/test_report.py` (extracted from `tests/test_analysis.py`)
+- Test: `tests/test_report.py` (already created in Task 5; this task makes it importable and green)
 
 **Interfaces:**
 - Consumes: `llmlab.analysis.scoring.TierScore`, `llmlab.analysis.mapping`, `llmlab.config`.
@@ -593,23 +623,25 @@ __all__ = ["build_profile", "render_html", "render_markdown", "write_reports"]
 
 Then move `write_reports` (old lines 175–190) into this file verbatim, adjusting it to call the now-imported `render_markdown` and `render_html`.
 
-- [ ] **Step 6: Extract the reporter tests into `tests/test_report.py`**
+- [ ] **Step 6: Run the full suite with no exclusions**
 
-Move every test recorded as failing in Task 5 Step 6 out of `tests/test_analysis.py` into a new `tests/test_report.py`, changing only their imports to `from llmlab import report`. Give the file this docstring:
-
-```python
-"""Report rendering: profile structure, Markdown and HTML output."""
-```
-
-- [ ] **Step 7: Run the full suite so far**
+`tests/test_report.py` already exists — Task 5 moved the reporter tests into it. This task makes it importable and green.
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -v
 ```
 
-Expected: everything PASSES. The combined count across `test_analysis.py` and `test_report.py` must equal the Task 5 count for `test_analysis.py` alone.
+Expected: everything PASSES, with **no `--ignore` flag** — that Task 5 needed one and this task does not is the gate. The total count must be Task 5's recorded count plus the tests in `test_report.py`.
 
-- [ ] **Step 8: Lint and report for commit**
+- [ ] **Step 7: Confirm the public API is reachable from the package root**
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -c "from llmlab.report import build_profile, render_markdown, render_html, write_reports; print('report API ok')"
+```
+
+Expected: `report API ok`. Callers must not need to know about the three-file split.
+
+- [ ] **Step 8: Lint and commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
@@ -738,7 +770,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pyte
 
 Expected: the pass count now meets or exceeds the Task 0 baseline (it will exceed it, by the packaging and CLI tests added along the way). **This is the gate that says the migration preserved behaviour.**
 
-- [ ] **Step 10: Report for commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Split CLI into cli, runner and console modules"
@@ -863,7 +895,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe scan --
 
 Expected: prints the garak commands without sending anything. Any family garak does not recognise is reported as skipped-with-a-reason rather than a crash — if one is skipped, go back to Step 2 and correct the name.
 
-- [ ] **Step 8: Report for commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Add curated headline suite"
@@ -971,7 +1003,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pyte
 
 If a test asserts on the old bare-percentage cell text, update that assertion to the new format — this is an intended output change, not a regression.
 
-- [ ] **Step 9: Lint and report for commit**
+- [ ] **Step 9: Lint and commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
@@ -1120,7 +1152,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pyte
 
 Expected: PASS.
 
-- [ ] **Step 8: Lint and report for commit**
+- [ ] **Step 8: Lint and commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
@@ -1399,7 +1431,7 @@ cd /c/Users/angus/projects/llm-injection-lab && cat runs/*/manifest.json
 
 Expected: valid JSON with every field populated (`model` and `model_digest` will be null for the mock backend, which is correct).
 
-- [ ] **Step 8: Full suite, lint, report for commit**
+- [ ] **Step 8: Full suite, lint, commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check . && .venv/Scripts/python.exe -m ruff format --check .
@@ -1462,7 +1494,7 @@ Record the macro ASR, pooled ASR and utility per tier, and the full defence matr
 
 Open the generated HTML report and capture the defence-matrix section as `screenshots/01_report-defence-matrix.png` and the evidence section as `screenshots/02_report-evidence.png`, replacing the old images.
 
-- [ ] **Step 7: Report for commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add screenshots && git commit -m "Add report screenshots from the real headline run"
@@ -1509,7 +1541,7 @@ cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe list su
 
 Every command block in the README must be executed and confirmed. A portfolio README with a command that errors is worse than one without the command.
 
-- [ ] **Step 5: Report for commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Rewrite README and FINDINGS against the real headline run"
@@ -1557,7 +1589,7 @@ In the **Offensive** table of `README.md`, replace the removed row (or add one i
 
 Substitute the real GitHub owner and URL confirmed when the remote was created in Task 1.
 
-- [ ] **Step 5: Report for commit**
+- [ ] **Step 5: Commit**
 
 Two repositories, two commits. For the homelab:
 
