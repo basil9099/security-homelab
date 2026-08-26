@@ -148,7 +148,7 @@ can be re-run after any change. Target: 1,000–1,500 attempts per tier.
 | Component | Contents | Rationale |
 |---|---|---|
 | Native packs | all four + `benign` | ~35 probes, deterministic detectors, the strongest findings |
-| `latentinjection` | 2–3 subclasses | indirect injection, the project's central claim |
+| `latentinjection` | three named subclasses (`LatentInjectionReport`, `LatentInjectionResume`, `LatentInjectionFactSnippetLegal`) — **never the bare family**, which expands to 17 subclasses and 11,748 prompts | indirect injection, the project's central claim |
 | `promptinject` | the `*Mini` variants | garak ships reduced sets for exactly this purpose |
 | `dan.DanInTheWildMini` | | persona jailbreak, curated |
 | `encoding.InjectBase64` | one probe, not the family | keeps the encoding finding without the 7,000-prompt tail |

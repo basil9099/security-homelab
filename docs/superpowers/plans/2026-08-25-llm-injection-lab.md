@@ -400,13 +400,27 @@ OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Us
 
 The `as garak_runner` aliases keep the body of the test file unchanged, so this step stays a pure move.
 
-- [ ] **Step 5: Run the engine tests**
+Also rewrite the analysis import on line 12 — `from modules.parser import parse_report` becomes `from llmlab.analysis.parser import parse_report`. It will not resolve yet; see Step 5.
+
+- [ ] **Step 5: Verify the engine modules import, and run everything except the engine tests**
+
+`tests/test_engines.py` cannot run in this task. It imports `parse_report` from the analysis layer (line 12, used at lines 128, 137, 162 and inside `TestDefenceGradient`), and analysis does not arrive until Task 5. The dependency runs engines-source → analysis-source → engine-tests, so the tests are last in that chain and Task 5 is what turns them green.
+
+First confirm the ported modules import cleanly — this is the real gate for this task:
 
 ```bash
-cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_engines.py -v
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -c "from llmlab.engines import garak, native, probes, detectors; print('engines import ok:', garak.garak_available.__name__, native.run_native.__name__, len(probes.CANARY_EXFIL), len(detectors.DETECTORS))"
 ```
 
-Expected: all PASS, including `TestDefenceGradient` which still lives in this file. It moves in Task 4.
+Expected: prints without error. An `ImportError` naming `llmlab.analysis` means an engine *source* module reached into analysis, which it must not — stop and report.
+
+Then the suite, with the engine tests excluded:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests --ignore=tests/test_engines.py -q
+```
+
+Expected: green except the known `test_mappings_file_resolves_to_a_real_file` failure. Record the pass count.
 
 - [ ] **Step 6: Lint and commit**
 
@@ -421,6 +435,8 @@ cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Por
 ---
 
 ### Task 4: Extract and reframe the defence-pipeline test
+
+> **Execution order: run this task AFTER Task 5.** `TestDefenceGradient` calls `parse_report` and `score_reports`, both from the analysis layer, so neither this task's gate nor Task 3's can run until Task 5 has ported analysis. Sequence is 1, 2, 3, **5**, **4**, 6, 7, … Task 5 does not depend on anything in Task 4, so the swap is safe.
 
 `TestDefenceGradient` currently sits at `tests/test_engines.py:363`, inside a 418-line file, and the old README presented it as if it corroborated the findings. It does not — it runs against the mock. This task moves it out and says so in the docstring.
 
@@ -499,8 +515,27 @@ OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Us
 
 - [ ] **Step 2: Rewrite imports**
 
+**The analysis layer imports the engines layer**, so the engines rules must come first — a generic `modules.` → `analysis.` rule would silently misroute them:
+
+| Source line | Must become |
+|---|---|
+| `parser.py:20` `from modules.detectors import HIT_THRESHOLD` | `from llmlab.engines.detectors import HIT_THRESHOLD` |
+| `parser.py:21` `from modules.native_runner import PROBE_PREFIX` | `from llmlab.engines.native import PROBE_PREFIX` |
+| `scoring.py:22` `from modules import mapping` | `from llmlab.analysis import mapping` |
+| `scoring.py:23` `from modules.native_runner import PROBE_PREFIX` | `from llmlab.engines.native import PROBE_PREFIX` |
+| `scoring.py:24` `from modules.parser import EvalRow, Report` | `from llmlab.analysis.parser import EvalRow, Report` |
+| `mapping.py:17` `import config` | `from llmlab import config` |
+
+Note `native_runner` → `native`: the module was renamed in Task 3, so this is a two-part rewrite, not just a package change.
+
 ```bash
-cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/analysis && sed -i 's/^import config$/from llmlab import config/; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' *.py
+cd /c/Users/angus/projects/llm-injection-lab/src/llmlab/analysis && sed -i 's/^import config$/from llmlab import config/; s/^from modules\.detectors import /from llmlab.engines.detectors import /; s/^from modules\.native_runner import /from llmlab.engines.native import /; s/^from modules\.probes import /from llmlab.engines.probes import /; s/^from modules\.parser import /from llmlab.analysis.parser import /; s/^from modules\.scoring import /from llmlab.analysis.scoring import /; s/^from modules\.mapping import /from llmlab.analysis.mapping import /; s/^from modules import /from llmlab.analysis import /; s/^from modules\./from llmlab.analysis./' *.py
+```
+
+Then verify the six rewrites above landed exactly as the table says — a wrong one here fails at import, so it will not hide:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -c "from llmlab.analysis import parser, scoring, mapping; print('analysis imports ok')"
 ```
 
 - [ ] **Step 3: Check for stale references**
@@ -529,15 +564,31 @@ OLD=/c/Users/angus/security-homelab/projects/offensive/llm_red_team && NEW=/c/Us
 
 Note the reporter import is **dropped**, not rewritten.
 
-- [ ] **Step 6: Move the six reporter tests into `tests/test_report.py`**
+- [ ] **Step 6a: Fix the in-function engines import the sed cannot reach**
 
-Find them:
+`tests/test_analysis.py` has an **indented, in-function** import inside `test_every_native_pack_is_mapped`:
 
-```bash
-cd /c/Users/angus/projects/llm-injection-lab && grep -n "reporter" tests/test_analysis.py
+```python
+        from modules import probes
 ```
 
-Cut every test function that references `reporter` out of `tests/test_analysis.py` and into a new `tests/test_report.py`, changing only their imports. The new file starts:
+The Step 5 sed is anchored to `^from`, so it will not match an indented line — and its generic rule would map this to `llmlab.analysis.probes`, which is wrong. `probes` lives in the **engines** package. Rewrite it by hand to:
+
+```python
+        from llmlab.engines import probes
+```
+
+This is the same class of defect that required a fix round in Task 3. After the sed, always grep for indented imports:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && grep -n "^\s\+from \(modules\|target\|main\)\|^\s\+import \(config\|main\)$" tests/*.py || echo "no indented stale imports"
+```
+
+- [ ] **Step 6b: Move the `TestReporter` class into `tests/test_report.py`**
+
+The reporter-dependent tests are one contiguous class — `TestReporter`, at lines 301–346 of the original file: a `profile` fixture plus six tests (`test_orders_tiers_weakest_first`, `test_matrix_has_a_cell_per_tier`, `test_matrix_marks_families_a_tier_never_saw`, `test_markdown_carries_the_headline_numbers`, `test_html_is_self_contained`, `test_writes_all_three_formats`). Move the **whole class**, not individually-grepped functions — trust the class boundary over any enumeration, including this one.
+
+Cut it out of `tests/test_analysis.py` into a new `tests/test_report.py`, changing only its imports. The new file starts:
 
 ```python
 """Report rendering: profile structure, Markdown and HTML output."""
@@ -555,10 +606,24 @@ and every `reporter.` in the moved bodies becomes `report.`. Do not change any a
 - [ ] **Step 7: Run, with the not-yet-existing report package excluded**
 
 ```bash
-cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests --ignore=tests/test_report.py -q
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests --ignore=tests/test_report.py --ignore=tests/test_cli.py -q
 ```
 
-Expected: **green**. `tests/test_report.py` cannot import until Task 6 builds the package, which is why it is ignored here; Task 6 drops the `--ignore` and gates on the full suite. Record the pass count.
+Expected: **green**. Two files are excluded and each has its own owner: `tests/test_report.py` cannot import until Task 6 builds the report package, and `tests/test_cli.py` (extracted from `test_engines.py` during Task 3's fix round) needs `llmlab.cli` from Task 7. Task 6 drops the first `--ignore`; Task 7 drops the second. Record the pass count.
+
+Then re-run ruff. Task 3 left an import-grouping artifact in `tests/test_engines.py` — ruff's isort classified `llmlab.analysis` as third-party because the package did not exist on disk yet. Now that it does, the grouping fixes itself:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m ruff check --fix . && .venv/Scripts/python.exe -m ruff format .
+```
+
+**`tests/test_engines.py` must flip from unrunnable to green in this task.** Task 3 could not run it — it imports `parse_report` from the analysis layer you have just created. Confirm explicitly:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests/test_engines.py -q
+```
+
+Expected: green, including `TestDefenceGradient`. If it is not, the analysis port is incomplete — that is this task's problem, not a deferred one.
 
 - [ ] **Step 8: Commit**
 
@@ -662,7 +727,7 @@ cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Spl
 - Create: `src/llmlab/runner.py` — `_free_port`, `serve_in_thread`, `build_target_app`, `_scan_tier`, `_run_native`, `_run_garak`, `_stamp`
 - Create: `src/llmlab/console.py` — `_print_summary` and the `list` output tables
 - Create: `src/llmlab/__main__.py`
-- Test: `tests/test_cli.py`
+- Modify: `tests/test_cli.py` — **this file already exists.** Task 3's fix round extracted the `TestCli` class into it out of `test_engines.py`, where it had been stranded importing the old top-level `main` module. Its four tests use `from llmlab import cli as main` and reference `main.main([...])` and `main.console`. This task makes them pass and adds its own tests alongside them; it does not create the file from scratch.
 
 **Interfaces:**
 - Consumes: everything from Tasks 1–6.
@@ -686,7 +751,15 @@ Cut `_free_port` (line 49), `serve_in_thread` (66), `build_target_app` (87), `_s
 
 - [ ] **Step 3: Move the console output into `console.py`**
 
-Cut `_print_summary` (line 263) and the table-building parts of `cmd_list` (311) into `console.py`, renaming `_print_summary` to `print_summary`. The `console = Console()` singleton moves here and is imported by the other two modules. Header:
+`console.py` takes three things:
+
+1. **The `console = Console()` singleton** (`main.py:41`). This is load-bearing: `tests/test_cli.py` monkeypatches `main.console`, so `cli.py` must do `from llmlab.console import console` — importing the *instance*, not the module — or those four tests break.
+2. **`_print_summary`** (line 263), renamed `print_summary` since it now crosses a module boundary.
+3. **`cmd_list`'s four rendering branches** (lines 311–359), each becoming its own function: `print_suites()`, `print_probes()`, `print_tiers()`, `print_mappings()`. Each branch is already self-contained — build a `Table`, populate it, `console.print(table)` — so each body moves verbatim into its own function.
+
+`cmd_list` then stays in `cli.py` as a dispatcher over `args.what`, returning 0. `tests/test_cli.py::test_list_subcommands` is parametrized over exactly `["suites", "probes", "tiers", "mappings"]`, so all four paths are covered by an existing test — if one is mis-wired, that test catches it.
+
+Header:
 
 ```python
 """Terminal output: summary tables and `list` command rendering."""
@@ -718,9 +791,11 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 6: Write the failing CLI test**
+- [ ] **Step 6: Extend the existing CLI test file**
 
-Create `tests/test_cli.py`:
+`tests/test_cli.py` already exists and holds the `TestCli` class extracted in Task 3's fix round. Its tests call `main.main([...])` and monkeypatch `main.console`, where `main` is `llmlab.cli`. **Reconcile that first:** the old `main.py` held a module-level `console = Console()` instance, but this task moves that singleton into `llmlab/console.py`. For `monkeypatch.setattr(main.console, "print", ...)` to keep working, `llmlab/cli.py` must import the instance (`from llmlab.console import console`), not the module. Verify those four tests pass before adding new ones.
+
+Then append to `tests/test_cli.py`:
 
 ```python
 """The CLI parses, dispatches, and lists without touching the network."""
@@ -774,6 +849,76 @@ Expected: the pass count now meets or exceeds the Task 0 baseline (it will excee
 
 ```bash
 cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Split CLI into cli, runner and console modules"
+```
+
+---
+
+### Task 7b: Retire the old project identity
+
+Added mid-execution. The installed command is `llmlab`, but running `llmlab --help` prints `usage: llm-red-team`. The old monorepo's name survives in several places, and this is the first thing a reader of the repo sees. Task 7's review judged it real and user-visible but correctly out of scope for that task's gate, so it gets its own pass.
+
+**Files:**
+- Modify: `src/llmlab/config.py`, `src/llmlab/cli.py`
+
+**Interfaces:**
+- Changes the value of `config.TOOL_NAME` and two environment-variable names. No signatures change.
+
+- [ ] **Step 1: Fix the `--help` banner**
+
+`src/llmlab/cli.py`, in `build_parser()`, the `argparse.ArgumentParser(...)` call has a hardcoded `prog="llm-red-team"`. Change it to `prog="llmlab"`. **This is a separate literal from `config.TOOL_NAME`** — they happen to share a string. This one is what `--help` prints.
+
+- [ ] **Step 2: Fix `TOOL_NAME`**
+
+`src/llmlab/config.py:18`: `TOOL_NAME = "llm-red-team"` becomes `TOOL_NAME = "llmlab"`.
+
+It has four consumers, all of which pick the new value up automatically: `cli.py:53` and `cli.py:72` (console banners), `report/profile.py:40` (the `tool` field in report metadata), and `report/__init__.py:30` (the report output-filename prefix). `tests/test_report.py:70` compares against `config.TOOL_NAME` itself, so it is value-agnostic and needs no edit.
+
+Note the filename prefix changes, so generated reports will be named `llmlab-<timestamp>` instead. That is intended and safe — no runs exist yet, and `FINDINGS.md` is written fresh in Task 13.
+
+- [ ] **Step 3: Rename the environment variables**
+
+In `src/llmlab/config.py`: `LLMRT_CANARY` → `LLMLAB_CANARY` (the docstring at line ~76 and the `os.environ.get` at ~79), and `LLMRT_GARAK_BIN` → `LLMLAB_GARAK_BIN` (line ~130). Nothing outside `config.py` references either.
+
+- [ ] **Step 4: Fix the stale usage examples**
+
+`src/llmlab/cli.py`'s module docstring shows five `python main.py ...` lines. `main.py` no longer exists. Rewrite them for the installed command:
+
+```
+    llmlab serve   --tier naive
+    llmlab scan    --all-tiers --suite injection
+    llmlab analyze runs/<timestamp>
+    llmlab report  runs/<timestamp> --format all
+    llmlab list    suites
+```
+
+- [ ] **Step 5: Drop the redundant main guard**
+
+`src/llmlab/cli.py` ends with an `if __name__ == "__main__": sys.exit(main())` block carried over from `main.py`. `__main__.py` is the packaged entry point for `python -m llmlab`, and `[project.scripts]` handles `llmlab`, so this only fires if someone executes `cli.py` directly. Remove it, and remove the `import sys` if nothing else in the file uses it — check before deleting.
+
+- [ ] **Step 6: Verify the user-visible surface**
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe --help && .venv/Scripts/python.exe -m llmlab list suites
+```
+
+Expected: the banner reads `usage: llmlab`. Then confirm nothing stale survives:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && grep -rn "llm-red-team\|LLMRT_\|main\.py" src/ tests/ --include="*.py" || echo "clean"
+```
+
+Expected: `clean`.
+
+- [ ] **Step 7: Full suite, lint, commit**
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check --no-cache . && .venv/Scripts/python.exe -m ruff format --check .
+```
+
+Expected: 139 passing, no ignores, unchanged from Task 7.
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Retire the old project identity from the CLI and config"
 ```
 
 ---
@@ -868,7 +1013,17 @@ Insert into the `SUITES` dict, **before** the `SUITES["full"] = ...` line so `fu
     "headline": {
         "garak": [
             # Names verified against the installed garak in Task 8 Step 2.
-            "latentinjection",
+            #
+            # latentinjection is pinned to three named subclasses. The BARE family
+            # name expands to all 17 subclasses including the *Full variants
+            # (ResumeFull and FactSnippetEiffelFull are 2,400 prompts each), which
+            # alone is 11,748 prompts per tier — 94% of the suite, and a ~15.7h
+            # three-tier run. That is the `full` suite's runtime, which is exactly
+            # what this suite exists to avoid. These three are the document-injection
+            # scenarios, 256 prompts each, matching the project's rag_poison theme.
+            "latentinjection.LatentInjectionReport",
+            "latentinjection.LatentInjectionResume",
+            "latentinjection.LatentInjectionFactSnippetLegal",
             "promptinject.HijackHateHumansMini",
             "dan.DanInTheWildMini",
             "encoding.InjectBase64",
@@ -993,7 +1148,33 @@ Expected: PASS.
 
 - [ ] **Step 7: Show the hit count in the report**
 
-In `src/llmlab/report/markdown.py`, the defence-matrix cells currently render a bare percentage via `_pct`. Change the per-family cells to render `f"{_pct(rate)} ({hits}/{attempts})"` using the `FamilyScore.hits` and `FamilyScore.attempts` fields that `llmlab.analysis.scoring` already populates. This is what turns `100%` into `100% (5/5)`, which is the point of raising native generations.
+Raising native generations is pointless if the report still shows a bare percentage — `100%` from one attempt and `100%` from five look identical. This step surfaces the denominator.
+
+**Two corrections to what an earlier draft of this plan claimed.** `FamilyScore` has no `hits`/`attempts` fields; its actual fields are `passed`, `failed`, `total`, where `failed` is the attack-success count and `total` the attempt count (`asr` is `failed / total`). And the counts are not in the profile at all — `profile.py::_matrix` builds only an `asr` list per row. So this is a three-part change, not a one-line edit:
+
+**a. Carry the counts into the profile.** In `src/llmlab/report/profile.py`, `_matrix` currently emits per row:
+
+```python
+                "asr": [
+                    round(score.families[family].asr, 4) if family in score.families else None
+                    for score in scores
+                ],
+```
+
+Add a parallel `counts` list beside it, `None` where the family is absent so it stays aligned with `asr`:
+
+```python
+                "counts": [
+                    [score.families[family].failed, score.families[family].total]
+                    if family in score.families
+                    else None
+                    for score in scores
+                ],
+```
+
+**b. Render it in Markdown.** In `src/llmlab/report/markdown.py`, the matrix cells are built by `" | ".join(_pct(value) for value in row["asr"])`. Zip `asr` with `counts` so a cell reads `100% (5/5)`, and falls back to the bare `_pct` output when `counts` is `None`.
+
+**c. Render it in HTML too.** `src/llmlab/report/html.py` builds the same matrix. Apply the same treatment — a report whose Markdown and HTML disagree about the numbers is worse than one that shows neither.
 
 - [ ] **Step 8: Run the report tests**
 
@@ -1142,7 +1323,11 @@ In `cli.py`:
     )
 ```
 
-In `runner.py`, `build_target_app` gains a `seed: int | None = None` parameter and passes it to `build_backend`. Its callers pass `args.seed`.
+Add the same `--seed` argument to the **`serve`** subparser as well. `build_target_app` has exactly two callers — `cmd_serve` (`cli.py:50`) and `scan_tier` (`runner.py:82`) — and leaving `serve` unpinned would mean `llmlab serve --backend ollama` drifts between runs while `scan` does not. In a tool whose argument is that published numbers should be re-derivable, that inconsistency is worth five lines to avoid.
+
+In `runner.py`, `build_target_app` gains a `seed: int | None = None` parameter and passes it to `build_backend`. Both callers pass `args.seed`.
+
+The `None` default is load-bearing: `MockBackend()` takes no sampling parameters, so `build_backend` must accept a seed and simply not forward it for the mock. A mock that errored on an unexpected seed would break every existing test.
 
 - [ ] **Step 7: Run the tests**
 
@@ -1380,7 +1565,9 @@ def garak_version() -> str | None:
     return result.stdout.strip() or None
 ```
 
-Then in `runner.py`, at the start of a scan build the manifest and after the last tier finishes call `finish` and `write_manifest` into the run directory:
+**Where this goes.** An earlier draft of this plan said `runner.py`. That is wrong: `run_dir` and `args` both live in `cmd_scan` in `cli.py` (`run_dir` is computed at `cli.py:69`, the tier loop is at `cli.py:87-88`), and `runner.scan_tier` only ever sees one tier. Build and write the manifest in `cmd_scan`, wrapping the tier loop.
+
+Build it immediately after `run_dir.mkdir(...)`:
 
 ```python
     run_manifest = manifest.build_manifest(
@@ -1401,15 +1588,38 @@ Then in `runner.py`, at the start of a scan build the manifest and after the las
     )
 ```
 
-and after the tier loop completes:
+Then write it **after** the `if args.dry_run: ... return 0` early return, immediately before the call to `_analyse_and_report`. A dry run sends no probes, so it must not leave a manifest behind claiming it did:
 
 ```python
     manifest.write_manifest(run_dir, manifest.finish(run_manifest))
 ```
 
+The current shape of that block is:
+
+```python
+    for tier in tiers:
+        scan_tier(tier, suite, run_dir, args, use_garak)
+
+    if args.dry_run:
+        console.print("[yellow]Dry run — no probes were sent.[/]")
+        return 0
+
+    return _analyse_and_report(run_dir, args.backend, formats=args.format)
+```
+
+so the write goes between the dry-run block and the `return`.
+
 - [ ] **Step 6: Surface it in the report**
 
-In `report/profile.py`, `build_profile` gains a `manifest: dict | None = None` parameter and puts it in the profile under a `"manifest"` key. In `report/markdown.py`, render a single line beneath the headline table when a manifest is present:
+In `report/profile.py`, `build_profile` gains a `manifest: dict | None = None` parameter and puts it in the profile under a `"manifest"` key. Its current signature is `build_profile(tiers, deltas, reports, run_dir, backend="")`, so the new parameter goes last and defaults to `None` — every existing caller keeps working untouched.
+
+**Read the manifest in `_analyse_and_report`** (`cli.py:105`), not in `cmd_scan`. That function already receives `run_dir` and nothing else, and it already derives `backend` from the parsed reports when the caller did not supply one — reading the manifest the same way follows the pattern that is there. It also means `llmlab analyze <old-run>` and `llmlab report <old-run>` pick up that run's manifest for free, which is precisely the point of writing one:
+
+```python
+    run_manifest = manifest.read_manifest(run_dir)
+```
+
+and pass it through to `build_profile`. `read_manifest` returns `None` for a directory with no manifest, so pre-existing run directories still analyse. In `report/markdown.py`, render a single line beneath the headline table when a manifest is present:
 
 ```
 > Run: `{suite}` suite, backend `{backend}`, model `{model}` ({model_digest}), garak {garak_version}, seed {seed}, {duration_seconds}s — {started_at}
@@ -1467,6 +1677,24 @@ If `llama3.2` is absent, ask the owner to pull it — this is a large download a
 ```bash
 ollama pull llama3.2
 ```
+
+- [ ] **Step 2b: Verify the manifest captures a real digest — before spending hours**
+
+`ollama_digest` has never run against a live daemon. If its endpoint or parsing is wrong it returns `None`, the scan proceeds happily, and the published report says the model's digest is unknown — in the one document whose purpose is showing the numbers are checkable. Two minutes here saves discovering that after a two-hour run.
+
+With the daemon up:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -c "from llmlab import config, manifest; print(repr(manifest.ollama_digest(config.OLLAMA_MODEL, config.OLLAMA_URL)))"
+```
+
+Expected: a `sha256:...` string. If it prints `None`, inspect what the daemon actually returns and fix the parsing before going further:
+
+```bash
+curl -s http://127.0.0.1:11434/api/tags
+```
+
+Do not start the real run until this returns a digest.
 
 - [ ] **Step 3: Time a single tier before committing to all three**
 
@@ -1532,6 +1760,16 @@ The mock backend drops from a section to two sentences in the testing section: i
 - [ ] **Step 3: Update the layout tree**
 
 Replace the old `modules/` tree with the `src/llmlab/` structure from this plan. Every path in the README must reflect the new package.
+
+- [ ] **Step 3b: Strip build-process scaffolding from the shipped code**
+
+This plan's own machinery has leaked into the repo. A reader should see a finished project, not the scaffolding used to build it.
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && grep -rn "Task [0-9]\|main\.py\|arrives in Task\|until Task" src/ tests/ --include="*.py"
+```
+
+Known at time of writing: `tests/test_cli.py:4,6` carries a docstring written as forward-looking instruction — "They do not run until Task 7 builds llmlab.cli", and a "Task 7 note:" about the `console` singleton. That guidance was acted on and the file it references (`main.py`) no longer exists. Rewrite the docstring to describe what the tests *are*, in the present tense, with no task numbers and no references to deleted files. Fix anything else the grep turns up the same way.
 
 - [ ] **Step 4: Check every command in the README actually runs**
 
