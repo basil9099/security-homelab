@@ -1730,18 +1730,92 @@ cd /c/Users/angus/projects/llm-injection-lab && git add screenshots && git commi
 
 ---
 
+### Task 12b: Mark detector-unreliable families
+
+Added mid-execution, after the real run. Two of the eight garak families in the `headline` suite — `dan.DanInTheWild` and `suffix.GCGCached` — use garak's `mitigation.MitigationBypass` detector, which matches a list of refusal phrases and scores a hit when none match. It therefore measures refusal *phrasing*, not attack success: a terse refusal counts as a successful attack.
+
+The consequence is not theoretical. `suffix` reported 19% → 92% → 77% across the tiers, but every hit examined was a refusal — `guarded` simply refuses more curtly. And `dan` reported 79% → 82% naive-to-hardened, when correcting for miscounted refusals shows hardening roughly *halves* genuine jailbreak success. One result inverted, one direction inverted.
+
+Full evidence, including verbatim model outputs: `.superpowers/sdd/2026-08-25-llm-injection-lab/detector-artifact-evidence.md`.
+
+The report must not present those two rows as defence results without saying so, and the headline macro ASR must not be computed from them.
+
+**Files:**
+- Modify: `src/llmlab/analysis/mappings.yaml`, `src/llmlab/analysis/mapping.py`, `src/llmlab/analysis/scoring.py`, `src/llmlab/report/{profile,markdown,html}.py`, `src/llmlab/console.py`
+- Test: `tests/test_analysis.py`, `tests/test_report.py`
+
+- [ ] **Step 1: Add the flag as data, not code**
+
+`mappings.yaml` already carries per-family metadata (OWASP id, severity, remediation). Add an optional `detector_reliable: false` key to the `dan` and `suffix` entries, with a comment recording why. Every other family omits the key and defaults to reliable. `FamilyMapping` in `mapping.py` gains a matching field.
+
+Keeping it in the YAML matters: this is a property of the probe family's *detector*, not of this run, and a future garak release that fixes the detector should be a data edit.
+
+- [ ] **Step 2: Exclude flagged families from macro ASR**
+
+`scoring.py` computes macro ASR as the mean of per-family rates. Exclude families whose mapping is `detector_reliable: false`, and expose the count of families included so the report can state it. Keep the per-family rates themselves — they are still reported, just not aggregated.
+
+Write the test first: a tier with a flagged family and two unflagged ones must produce a macro ASR over the two, not three.
+
+- [ ] **Step 3: Mark the rows and state the basis**
+
+In the Markdown and HTML matrices, mark flagged rows visibly (a `⚠` prefix on the family name plus a footnote). Beneath the tier summary, state what the macro ASR was computed over — e.g. "Macro ASR is the mean over 8 families with reliable detectors; `dan` and `suffix` are excluded, see the footnote." Do the same in the console summary.
+
+A reader skimming only the matrix must not come away with the two wrong numbers.
+
+- [ ] **Step 4: Verify against the real run**
+
+Re-render the existing run rather than re-scanning:
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/llmlab.exe report runs/20260826T205517Z --format all
+```
+
+Paste the new tier summary and matrix. Confirm the macro ASR changed (it now excludes two families) and that both flagged rows are marked.
+
+- [ ] **Step 5: Full suite, lint, commit**
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && .venv/Scripts/python.exe -m pytest tests -q && .venv/Scripts/python.exe -m ruff check --no-cache . && .venv/Scripts/python.exe -m ruff format --check .
+```
+
+```bash
+cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Mark detector-unreliable families and exclude them from macro ASR"
+```
+
+---
+
 ### Task 13: Rewrite FINDINGS.md and README.md
 
 **Files:**
 - Create: `FINDINGS.md`, `README.md`
 
+- [ ] **Step 0: Fix the defence-effectiveness table header**
+
+`src/llmlab/report/markdown.py` renders that table with a three-column header and four-cell data rows:
+
+```
+| Tier | ASR reduction | Utility change |
+| `guarded` | **+29 pts** | +13.4 pts | -12 pts |
+```
+
+The unlabelled column is the pooled-ASR reduction. Correct the header to `| Tier | Macro ASR reduction | Pooled ASR reduction | Utility change |` and check the HTML renderer for the same mismatch. Re-render the run and confirm the columns line up before writing any documentation that quotes them.
+
 - [ ] **Step 1: Rewrite `FINDINGS.md` against the real numbers**
 
 Keep the structure that works: the headline table, the defence matrix, application findings as an **F-series** (about the target's controls) kept separate from method findings as an **M-series** (about the measurement), evidence per finding, and a Reproducing section.
 
-Two changes from the old document:
+Changes from the old document:
 - The "Read this first" section about the mock backend is **removed**. Replace it with a short methodology note: which suite ran, why it is curated rather than exhaustive, and the manifest line identifying the model, digest, garak version and seed.
 - Every table is regenerated from the Task 12 run. No number survives from the old document.
+
+**Two old headline claims did not survive the real run, and the document must say so rather than quietly dropping them:**
+
+- The old FINDINGS claimed *"prompt-level defences do nothing about indirect injection"* — `rag_poison` 100% at both `naive` and `guarded`. The real run gives 80% → 20% → 0%, and `latentinjection` 39% → 22% → 17%. Prompt rules help substantially. The old claim was an artifact of the mock backend's regex.
+- The old FINDINGS claimed *"hardening cost nothing in utility"*. The real run shows `guarded` costs **12 points** — refusal rules made the model refuse 12% of legitimate helpdesk requests — while `hardened` gets the best ASR *and* restores utility to 100%. The finding is stronger than the old one: structured controls beat prompt engineering on both axes at once.
+
+**Add an M-series method finding on detector reliability.** This is the most valuable result in the run. Full evidence with verbatim model outputs is at `.superpowers/sdd/2026-08-25-llm-injection-lab/detector-artifact-evidence.md` — quote from it. The finding: garak's `mitigation.MitigationBypass` scores a hit when no refusal phrase matches, so it measures refusal *phrasing* rather than attack success. `suffix` reported 92% at `guarded` while the model refused 24 times out of 26, tersely. `dan`'s direction inverted. Two of eight garak families were affected; the six with deterministic or semantic detectors behaved sensibly.
+
+Tie it back to the project's own design argument, which the original README made and this run now demonstrates empirically: deterministic detectors are the right tool for "did our secret leave the building", and phrase-matching is not.
 
 - [ ] **Step 2: Rewrite `README.md` in the reviewer-first order**
 
@@ -1753,6 +1827,8 @@ Sections, in this order:
 4. **Why a target application and not a model scan** — port the four-question table from the old README verbatim, it is the strongest argument in the document
 5. The three hardening tiers and what each adds
 6. Install and quick start — `pip install -e .`, `llmlab scan`, not `python main.py`
+
+   **The install section must cover the garak-on-PATH trap.** It cost this project a wasted run. `garak_available()` uses `shutil.which(config.GARAK_BIN)`; install the `scan` extra into a venv, run `llmlab` without activating that venv, and garak is not found — the scan proceeds with native packs only, printing a single warning that scrolls past, and produces a confident report covering a fraction of the intended suite. Tell readers to either activate the venv or set `LLMLAB_GARAK_BIN` to the absolute path of the `garak` executable, and say which this run used. This is a reproducibility issue for anyone cloning the repo, not a footnote.
 7. Probe coverage, reading the report, layout, testing, references
 
 The mock backend drops from a section to two sentences in the testing section: it is a test double that keeps the suite network-free, and it produces no number in this repo.
