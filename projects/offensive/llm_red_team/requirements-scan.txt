@@ -1,3 +1,0 @@
-# Optional scanning engine. Heavy (pulls torch); intentionally kept out of
-# requirements.txt. See requirements.txt for why.
-garak>=0.10.0
