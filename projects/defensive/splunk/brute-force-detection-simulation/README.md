@@ -39,7 +39,7 @@ Expected to produce `NT_STATUS_LOGON_FAILURE`.
 ### 3. Manual SMBClient Attempt
 
 ```bash
-smbclient -L //192.168.0.147 -u testuser
+smbclient -L //192.168.0.147 -U testuser
 ```
 
 ![SMBClient](./screenshots/03_smbclient-attempt.png)
@@ -49,7 +49,7 @@ smbclient -L //192.168.0.147 -u testuser
 ### 4. Failed Login Confirmation
 
 ```bash
-smbclient -L //192.168.0.147 -u testuser
+smbclient -L //192.168.0.147 -U testuser
 # returns NT_STATUS_LOGON_FAILURE
 ```
 
@@ -61,7 +61,7 @@ smbclient -L //192.168.0.147 -u testuser
 
 ```bash
 for i in {1..10}; do
-  smbclient -L //192.168.0.147 -u testuser%"wrongpass" -m SMB2
+  smbclient -L //192.168.0.147 -U testuser%"wrongpass" -m SMB2
 done
 ```
 
@@ -76,7 +76,7 @@ Splunk alert triggered based on EventCode 4625 (Failed Logon):
 
 ```spl
 index=wineventlog EventCode=4625
-| stats count by Account_Name, src_ip
+| stats count by Account_Name, Source_Network_Address
 | where count > 5
 ```
 

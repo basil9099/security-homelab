@@ -78,26 +78,29 @@ _PASSWORDS = [
     "access",
 ]
 
-# Persistent attackers + random scanners
+# Persistent attackers + random scanners.
+# Public addresses are drawn from the RFC 5737 documentation ranges (TEST-NET),
+# never real routable IPs: presenting a live host as a "persistent attacker" in
+# output that reads as findings is misleading. Internal entries stay on the lab
+# subnet (10.10.10.0/24).
 _SOURCE_IPS = [
-    # "Persistent" attackers (higher probability)
-    "185.220.101.42",
-    "45.141.84.12",
-    "193.42.33.100",
-    # Occasional scanners
-    "103.25.17.88",
-    "91.240.118.50",
-    "194.26.29.15",
-    "178.128.42.199",
-    "167.99.200.31",
-    "64.225.80.5",
-    "159.65.144.3",
-    "206.189.25.100",
-    "142.93.167.88",
+    # "Persistent" attackers (higher probability) — TEST-NET-3 (203.0.113.0/24)
+    "203.0.113.11",
+    "203.0.113.12",
+    "203.0.113.13",
+    # Occasional scanners — TEST-NET-2 (198.51.100.0/24) + TEST-NET-1 (192.0.2.0/24)
+    "198.51.100.23",
+    "198.51.100.47",
+    "198.51.100.88",
+    "198.51.100.150",
+    "192.0.2.31",
+    "192.0.2.66",
+    "192.0.2.114",
+    "192.0.2.200",
     # Internal lab IPs
     "10.10.10.100",
     "10.10.10.105",
-    "192.168.1.50",
+    "10.10.10.140",
 ]
 
 _HTTP_PATHS = [

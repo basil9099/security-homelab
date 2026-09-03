@@ -8,6 +8,7 @@ all:
           ansible_user: admin
           ansible_connection: ansible.netcommon.network_cli
           ansible_network_os: pfsensible.core.pfsense
-          ansible_python_interpreter: /usr/local/bin/python3.11
+          # No ansible_python_interpreter: the network_cli connection runs modules
+          # on the control node, so a managed-host interpreter path has no effect.
           # Key-based auth is assumed — enable SSH + "Authorized keys only" in the WebGUI first.
           ansible_ssh_private_key_file: ~/.ssh/homelab_pfsense_ed25519
