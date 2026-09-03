@@ -43,9 +43,12 @@ repos:
         files: '^projects/defensive/pfsense_firewall/config/.*\.xml$'
 
       - id: pfsense-keys-redacted
-        name: pfSense config must not contain a live key or certificate
+        name: pfSense config must not contain a live key, certificate or secret
         language: pygrep
-        entry: '<(prv|crt|ca)>(?!REDACTED-)'
+        # Mirrors the secret-bearing fields config.sanitise.sh redacts. refid /
+        # ssl-certref are deliberately absent: they are identifiers, not secrets,
+        # so failing a commit over them would be noise.
+        entry: '<(prv|crt|ca|md5-hash|sha1-hash|nt-hash|authorizedkeys|pre-shared-key|secret|password|ldap_bindpw|rocommunity|shared_key|tls|privatekey|apikey|apitoken)>(?!REDACTED-)'
         files: '^projects/defensive/pfsense_firewall/config/.*\.xml$'
 
       - id: no-private-keys-anywhere
