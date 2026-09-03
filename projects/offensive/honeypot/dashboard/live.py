@@ -16,7 +16,7 @@ import time
 from collections import deque
 
 from event_logger import EventLogger
-from models import HoneypotEvent
+from models import HoneypotEvent, format_credentials
 from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
@@ -134,7 +134,7 @@ class Dashboard:
 
             detail = ""
             if event.event_type == "credential_attempt" and event.credentials:
-                detail = f"{event.credentials.get('username', '')}:{event.credentials.get('password', '')}"
+                detail = format_credentials(event.credentials)  # password masked
             elif event.payload:
                 detail = event.payload[:60]
 

@@ -6,11 +6,12 @@ Thread-safe JSON-lines event logger with a buffer for the live dashboard.
 
 from __future__ import annotations
 
+import os
 import threading
 from collections import Counter, deque
 from pathlib import Path
 
-from models import HoneypotEvent
+from models import HoneypotEvent, format_credentials
 
 
 class EventLogger:
@@ -29,6 +30,7 @@ class EventLogger:
         echo_console: bool = False,
     ) -> None:
         self._log_path = Path(log_file)
+        self._secure_log_file()
         self._echo_json = echo_json
         self._echo_console = echo_console
         self._lock = threading.Lock()
@@ -82,6 +84,20 @@ class EventLogger:
 
     # ---- internals --------------------------------------------------------
 
+    def _secure_log_file(self) -> None:
+        """Create the log owner-only.
+
+        The file holds captured credentials, so it must not be world-readable.
+        Created here, before the first attacker credential is ever written, and
+        chmod'd explicitly because touch()'s mode is masked by the umask (and,
+        for a pre-existing file, touch does not change the mode at all).
+        """
+        self._log_path.touch(mode=0o600, exist_ok=True)
+        try:
+            os.chmod(self._log_path, 0o600)
+        except OSError:
+            pass  # best-effort: exotic filesystems / platforms without POSIX modes
+
     @staticmethod
     def _console_line(event: HoneypotEvent) -> str:
         """Format an event as a single readable console line."""
@@ -91,9 +107,7 @@ class EventLogger:
 
         detail = ""
         if event.credentials:
-            username = event.credentials.get("username", "")
-            password = event.credentials.get("password", "")
-            detail = f"{username}:{password}"
+            detail = format_credentials(event.credentials)  # password masked
         elif event.payload:
             detail = event.payload[:80]
 

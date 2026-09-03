@@ -111,6 +111,17 @@ All events are logged as JSON lines (`.jsonl`) for easy parsing and SIEM ingesti
 }
 ```
 
+**Captured-credential handling.** Recording what attackers try is the point, so
+the full `username`/`password` is written to the `.jsonl` record. Because that
+file holds real credentials — attackers routinely reuse ones that work elsewhere
+— it is created `0600` (owner-only) before the first write. The live console and
+dashboard views mask the password (`root:********`); those outputs land in
+scrollback, screen recordings and committed screenshots, so the plaintext stays
+in the owner-only log rather than on screen. HTTP request headers are captured
+verbatim (they can carry `Authorization`/`Cookie` values an attacker sends) and
+live only in that same protected log. The `--json` stream is raw by design and
+is not masked — treat its output like the log file itself.
+
 ### Live Terminal Dashboard
 
 Three-panel Rich dashboard showing:
