@@ -63,9 +63,15 @@ class FTPHandler(ProtocolHandler):
                 cmd = parts[0].upper()
                 arg = parts[1] if len(parts) > 1 else ""
 
-                self._emit(self._make_event(
-                    ip, port, "command", payload=line, session_id=session_id,
-                ))
+                self._emit(
+                    self._make_event(
+                        ip,
+                        port,
+                        "command",
+                        payload=line,
+                        session_id=session_id,
+                    )
+                )
 
                 response = self._handle_command(cmd, arg, username)
 
@@ -73,11 +79,15 @@ class FTPHandler(ProtocolHandler):
                 if cmd == "USER":
                     username = arg
                 elif cmd == "PASS" and username:
-                    self._emit(self._make_event(
-                        ip, port, "credential_attempt",
-                        credentials={"username": username, "password": arg},
-                        session_id=session_id,
-                    ))
+                    self._emit(
+                        self._make_event(
+                            ip,
+                            port,
+                            "credential_attempt",
+                            credentials={"username": username, "password": arg},
+                            session_id=session_id,
+                        )
+                    )
 
                 conn.sendall(f"{response}\r\n".encode())
 

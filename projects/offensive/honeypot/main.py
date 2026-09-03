@@ -57,7 +57,8 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Multi-protocol honeypot system for cybersecurity home labs.",
     )
     parser.add_argument(
-        "--config", "-c",
+        "--config",
+        "-c",
         default="honeypot.yaml",
         help="Path to YAML config file (default: honeypot.yaml)",
     )
@@ -98,8 +99,10 @@ def _build_parser() -> argparse.ArgumentParser:
 # Orchestration
 # ---------------------------------------------------------------------------
 
+
 def _install_signal_handlers(stop: threading.Event) -> None:
     """Set SIGINT/SIGTERM to trip *stop* instead of raising."""
+
     def _handler(sig, frame):
         stop.set()
 
@@ -222,6 +225,7 @@ def _run_dashboard(
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def start_handlers(
     handlers: list,

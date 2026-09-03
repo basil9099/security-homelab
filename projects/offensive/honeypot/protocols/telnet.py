@@ -28,9 +28,14 @@ class TelnetHandler(ProtocolHandler):
         session_id = uuid.uuid4().hex[:10]
         conn.settimeout(30)
 
-        self._emit(self._make_event(
-            ip, port, "connection", session_id=session_id,
-        ))
+        self._emit(
+            self._make_event(
+                ip,
+                port,
+                "connection",
+                session_id=session_id,
+            )
+        )
 
         try:
             # Login sequence
@@ -44,11 +49,15 @@ class TelnetHandler(ProtocolHandler):
             if password is None:
                 return
 
-            self._emit(self._make_event(
-                ip, port, "credential_attempt",
-                credentials={"username": username, "password": password},
-                session_id=session_id,
-            ))
+            self._emit(
+                self._make_event(
+                    ip,
+                    port,
+                    "credential_attempt",
+                    credentials={"username": username, "password": password},
+                    session_id=session_id,
+                )
+            )
 
             # Fake shell
             conn.sendall(b"\r\nLast login: Mon Jan 15 09:20:11 2026 from 10.10.10.100\r\n")
@@ -84,9 +93,15 @@ class TelnetHandler(ProtocolHandler):
             if not cmd:
                 continue
 
-            self._emit(self._make_event(
-                ip, port, "command", payload=cmd, session_id=session_id,
-            ))
+            self._emit(
+                self._make_event(
+                    ip,
+                    port,
+                    "command",
+                    payload=cmd,
+                    session_id=session_id,
+                )
+            )
 
             if cmd in ("exit", "quit", "logout"):
                 conn.sendall(b"logout\r\n")

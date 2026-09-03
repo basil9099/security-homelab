@@ -26,9 +26,7 @@ class HoneypotEvent:
     session_id: str = ""
     metadata: dict = field(default_factory=dict)
     event_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict:
         return asdict(self)

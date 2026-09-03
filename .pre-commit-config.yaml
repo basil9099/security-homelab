@@ -3,6 +3,10 @@
 #   Run all:  pre-commit run --all-files
 #
 # ruff (lint + format) is configured by the root pyproject.toml.
+#
+# This repo commits device configuration and lab documentation, so the secret
+# scanning below is the backstop that stops an unsanitised export from being
+# committed by hand. It is not a substitute for config.sanitise.sh.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.8
@@ -20,3 +24,31 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=1024]
+
+  # Generic secret scanning: catches keys, tokens and credentials in any file.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # Targeted guards for the committed pfSense export. gitleaks does not know
+  # that this particular file is expected to be fully redacted, so assert the
+  # placeholders directly — the check the pfSense README specified.
+  - repo: local
+    hooks:
+      - id: pfsense-bcrypt-redacted
+        name: pfSense config must not contain a live bcrypt hash
+        language: pygrep
+        entry: '<bcrypt-hash>(?!REDACTED-ADMIN-HASH</bcrypt-hash>)'
+        files: '^projects/defensive/pfsense_firewall/config/.*\.xml$'
+
+      - id: pfsense-keys-redacted
+        name: pfSense config must not contain a live key or certificate
+        language: pygrep
+        entry: '<(prv|crt|ca)>(?!REDACTED-)'
+        files: '^projects/defensive/pfsense_firewall/config/.*\.xml$'
+
+      - id: no-private-keys-anywhere
+        name: no PEM private keys in any tracked file
+        language: pygrep
+        entry: '-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----'

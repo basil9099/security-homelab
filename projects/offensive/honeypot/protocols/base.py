@@ -75,6 +75,7 @@ SHELL_RESPONSES: dict[str, str] = {
 # Abstract base
 # ---------------------------------------------------------------------------
 
+
 class ProtocolHandler(ABC):
     """Base class for all honeypot protocol emulators.
 

@@ -115,12 +115,16 @@ class HTTPHandler(ProtocolHandler):
                     "user_agent": self.headers.get("User-Agent", ""),
                 }
 
-                handler._emit(handler._make_event(
-                    ip, src_port, "request",
-                    payload=f"{self.command} {self.path}",
-                    metadata=metadata,
-                    session_id=session_id,
-                ))
+                handler._emit(
+                    handler._make_event(
+                        ip,
+                        src_port,
+                        "request",
+                        payload=f"{self.command} {self.path}",
+                        metadata=metadata,
+                        session_id=session_id,
+                    )
+                )
 
                 # Check for credential submission
                 if body and self.command == "POST":
@@ -138,11 +142,15 @@ class HTTPHandler(ProtocolHandler):
                             password = parsed[k][0]
                             break
                     if username or password:
-                        handler._emit(handler._make_event(
-                            ip, src_port, "credential_attempt",
-                            credentials={"username": username, "password": password},
-                            session_id=session_id,
-                        ))
+                        handler._emit(
+                            handler._make_event(
+                                ip,
+                                src_port,
+                                "credential_attempt",
+                                credentials={"username": username, "password": password},
+                                session_id=session_id,
+                            )
+                        )
 
                 return session_id
 
@@ -173,8 +181,11 @@ class HTTPHandler(ProtocolHandler):
                 elif path in ("/phpmyadmin", "/phpMyAdmin", "/pma"):
                     self._send(403, _403_PAGE)
                 elif path == "/robots.txt":
-                    self._send(200, "User-agent: *\nDisallow: /admin\nDisallow: /wp-admin\n",
-                               content_type="text/plain")
+                    self._send(
+                        200,
+                        "User-agent: *\nDisallow: /admin\nDisallow: /wp-admin\n",
+                        content_type="text/plain",
+                    )
                 elif ".." in path or path.startswith("/."):
                     self._send(403, _403_PAGE)
                 else:
