@@ -59,14 +59,32 @@ EXPORT = """<?xml version="1.0"?>
 """
 
 LIVE_SECRETS = [
-    "$2y$10$REALHASH", "21232f297a57a5a743894a0e4a801fc3",
-    "d033e22ae348aeb5660fc2140aec35850c4da997", "8846f7eaee8fb117ad06bdd830b7586c",
-    "c3NoLXJzYSBBQUFBQjNOemFDMXljMkU=", "s3cr3t-community", "203.0.113.44",
-    "isp-user@example.net", "ispPassw0rd", "l2tp-real-secret", "00:0c:29",
-    "TUlJRENlcnRCb2R5", "TUlJRVBSSVZBVEU=", "6410ab3f9c2d1", "TUlJRENBQm9keQ==",
-    "TUlJRUNBS0VZ", "ipsec-psk-real", "radius-real-secret", "ldapBindPassw0rd",
-    "smtpPassw0rd", "dyndnsPassw0rd", "T1ZQTlNIQVJFRA==", "T1ZQTlRMUw==",
-    "d2lyZWd1YXJkcHJpdg==", "pfb-api-key-real", "pfb-api-token-real",
+    "$2y$10$REALHASH",
+    "21232f297a57a5a743894a0e4a801fc3",
+    "d033e22ae348aeb5660fc2140aec35850c4da997",
+    "8846f7eaee8fb117ad06bdd830b7586c",
+    "c3NoLXJzYSBBQUFBQjNOemFDMXljMkU=",
+    "s3cr3t-community",
+    "203.0.113.44",
+    "isp-user@example.net",
+    "ispPassw0rd",
+    "l2tp-real-secret",
+    "00:0c:29",
+    "TUlJRENlcnRCb2R5",
+    "TUlJRVBSSVZBVEU=",
+    "6410ab3f9c2d1",
+    "TUlJRENBQm9keQ==",
+    "TUlJRUNBS0VZ",
+    "ipsec-psk-real",
+    "radius-real-secret",
+    "ldapBindPassw0rd",
+    "smtpPassw0rd",
+    "dyndnsPassw0rd",
+    "T1ZQTlNIQVJFRA==",
+    "T1ZQTlRMUw==",
+    "d2lyZWd1YXJkcHJpdg==",
+    "pfb-api-key-real",
+    "pfb-api-token-real",
 ]
 
 
@@ -91,14 +109,18 @@ def test_non_secret_values_are_preserved(sanitised):
     assert root.find("system/user/name").text == "admin"
     # Static-map IPs and hostnames are lab facts, not secrets.
     assert [s.findtext("ipaddr") for s in root.iter("staticmap")] == [
-        "10.10.10.10", "10.10.10.20", "10.10.10.30"
+        "10.10.10.10",
+        "10.10.10.20",
+        "10.10.10.30",
     ]
 
 
 def test_static_map_macs_get_per_host_placeholders(sanitised):
     root = ET.fromstring(sanitised)
     assert [s.findtext("mac") for s in root.iter("staticmap")] == [
-        "REDACTED-DC01-MAC", "REDACTED-WKSTN01-MAC", "REDACTED-MAC"
+        "REDACTED-DC01-MAC",
+        "REDACTED-WKSTN01-MAC",
+        "REDACTED-MAC",
     ]
 
 
@@ -122,7 +144,9 @@ def test_header_comment_is_emitted(sanitised):
 
 
 def test_export_missing_optional_sections_does_not_error():
-    out = sanitise('<?xml version="1.0"?>\n<pfsense><system><hostname>pf</hostname></system></pfsense>')
+    out = sanitise(
+        '<?xml version="1.0"?>\n<pfsense><system><hostname>pf</hostname></system></pfsense>'
+    )
     assert ET.fromstring(out).find("system/hostname").text == "pf"
 
 
@@ -134,9 +158,7 @@ def test_every_redaction_rule_has_a_redacted_placeholder():
 def test_cli_writes_sanitised_xml_to_stdout(tmp_path):
     src = tmp_path / "export.xml"
     src.write_text(EXPORT, encoding="utf-8")
-    result = subprocess.run(
-        [sys.executable, str(TOOL), str(src)], capture_output=True, text=True
-    )
+    result = subprocess.run([sys.executable, str(TOOL), str(src)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert "ispPassw0rd" not in result.stdout
     ET.fromstring(result.stdout)
@@ -147,7 +169,7 @@ def test_cli_fails_on_missing_file(tmp_path):
         [sys.executable, str(TOOL), str(tmp_path / "nope.xml")], capture_output=True, text=True
     )
     assert result.returncode != 0
-    assert result.stdout.strip() == ""      # never emit a partial config
+    assert result.stdout.strip() == ""  # never emit a partial config
 
 
 def test_cli_emits_lf_line_endings_on_every_platform(tmp_path):
@@ -155,9 +177,7 @@ def test_cli_emits_lf_line_endings_on_every_platform(tmp_path):
     # regenerated config.xml differ from the committed one on every single line.
     src = tmp_path / "export.xml"
     src.write_text(EXPORT, encoding="utf-8")
-    result = subprocess.run(
-        [sys.executable, str(TOOL), str(src)], capture_output=True
-    )
+    result = subprocess.run([sys.executable, str(TOOL), str(src)], capture_output=True)
     assert result.returncode == 0, result.stderr
     assert b"\r\n" not in result.stdout
 
@@ -176,9 +196,7 @@ def test_plain_angle_brackets_in_text_are_not_over_escaped():
     assert "Block LAN -> MGMT" in out
     assert "&gt;" not in out
     # "<" and "&" must still be escaped or the document stops being well-formed.
-    nested = sanitise(
-        '<?xml version="1.0"?>\n<pfsense><descr>a &lt; b &amp; c</descr></pfsense>'
-    )
+    nested = sanitise('<?xml version="1.0"?>\n<pfsense><descr>a &lt; b &amp; c</descr></pfsense>')
     assert ET.fromstring(nested).find("descr").text == "a < b & c"
 
 

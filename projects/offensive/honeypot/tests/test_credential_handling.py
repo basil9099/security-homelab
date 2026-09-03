@@ -18,7 +18,10 @@ from models import HoneypotEvent, format_credentials, mask_password
 
 def _cred_event(username="admin", password="hunter2"):
     return HoneypotEvent(
-        protocol="ssh", src_ip="203.0.113.9", src_port=5, dst_port=2222,
+        protocol="ssh",
+        src_ip="203.0.113.9",
+        src_port=5,
+        dst_port=2222,
         event_type="credential_attempt",
         credentials={"username": username, "password": password},
     )
@@ -75,6 +78,7 @@ def test_console_line_masks_the_password(tmp_path):
 def test_dashboard_detail_masks_the_password():
     # The dashboard must route credentials through the same masking helper.
     from dashboard import live
+
     src = live.__file__
     with open(src, encoding="utf-8") as fh:
         code = fh.read()
