@@ -6,7 +6,7 @@
 #
 # This repo commits device configuration and lab documentation, so the secret
 # scanning below is the backstop that stops an unsanitised export from being
-# committed by hand. It is not a substitute for config.sanitise.sh.
+# committed by hand. It is not a substitute for config/sanitise_config.py.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.8
@@ -45,7 +45,7 @@ repos:
       - id: pfsense-keys-redacted
         name: pfSense config must not contain a live key, certificate or secret
         language: pygrep
-        # Mirrors the secret-bearing fields config.sanitise.sh redacts. refid /
+        # Mirrors the secret-bearing fields sanitise_config.py redacts. refid /
         # ssl-certref are deliberately absent: they are identifiers, not secrets,
         # so failing a commit over them would be noise.
         entry: '<(prv|crt|ca|md5-hash|sha1-hash|nt-hash|authorizedkeys|pre-shared-key|secret|password|ldap_bindpw|rocommunity|shared_key|tls|privatekey|apikey|apitoken)>(?!REDACTED-)'

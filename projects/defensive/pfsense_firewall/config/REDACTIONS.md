@@ -24,12 +24,13 @@ pfSense box you need to re-populate the following fields locally.
 | `//staticmap/mac`                          | `REDACTED-<HOSTNAME>-MAC`       | Re-enter the real NIC MAC from the named VM                            |
 | `//wan/ipaddr` (static)                    | `REDACTED-WAN-IP`               | Only if your WAN isn't DHCP / PPPoE                                    |
 | `//installedpackages//apikey`, `apitoken`  | `REDACTED-API-*`                | Regenerate in the package UI (pfBlockerNG, Suricata)                   |
+| any other `<password>` / `<secret>`        | `REDACTED-PASSWORD` / `REDACTED-SECRET` | Catch-all for package fields not listed above                  |
 
 Static-map MACs use a per-host placeholder derived from the entry's `<hostname>`
 (`REDACTED-DC01-MAC`), so it is clear which VM's NIC each one belongs to. Entries
 with no hostname fall back to `REDACTED-MAC`.
 
-The `config.sanitise.sh` script in this directory automates the stripping — run it over any freshly
+The `sanitise_config.py` script in this directory automates the stripping — run it over any freshly
 exported backup before committing. The table above and the script's XPath list are meant to stay in
 step; if you add a field to one, add it to the other.
 

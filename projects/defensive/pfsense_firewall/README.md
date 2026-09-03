@@ -32,7 +32,7 @@ lab (`projects/defensive/windows_server_with_AD/`).
 ```
 
 - `config/config.xml` — sanitised, committed. Captures interfaces, default rules, bootstrap DHCP.
-- `config/config.sanitise.sh` — strips password hashes, certs, PPPoE creds, MACs before commit.
+- `config/sanitise_config.py` — strips password hashes, certs, PPPoE creds, MACs before commit.
 - `config/REDACTIONS.md` — what's stripped and how to re-populate.
 - `ansible/` — everything that changes during a lab session.
 
@@ -44,8 +44,11 @@ lab (`projects/defensive/windows_server_with_AD/`).
 pfsense_firewall/
 ├── config/
 │   ├── config.xml              # committed source of truth (sanitised)
-│   ├── config.sanitise.sh      # strip secrets from an exported backup
+│   ├── sanitise_config.py      # strip secrets from an exported backup
 │   └── REDACTIONS.md           # what the sanitiser removes + how to re-populate
+├── tests/                      # pytest cover for the sanitiser
+├── conftest.py
+└── requirements-dev.txt
 ├── ansible/
 │   ├── ansible.cfg
 │   ├── requirements.yml        # pfsensible.core
@@ -127,13 +130,18 @@ assignment, initial DHCP scope, unbound config). Round-trip:
 ```bash
 # On the pfSense box: Diagnostics -> Backup & Restore -> Download configuration
 # Save as /tmp/config-exported.xml
-./config/config.sanitise.sh /tmp/config-exported.xml > config/config.xml
+python config/sanitise_config.py /tmp/config-exported.xml > config/config.xml
 git diff config/config.xml                                 # review every change
 git add config/config.xml && git commit
 ```
 
-The sanitiser is the gatekeeper — it must run before commit. A pre-commit hook checking for
-`bcrypt-hash` values not equal to `REDACTED-ADMIN-HASH` is a reasonable next step.
+The sanitiser is the gatekeeper — it must run before commit. It is stdlib-only Python, so it runs
+anywhere without extra packages, and `pytest` in this directory covers it. Two pre-commit hooks
+(`pfsense-bcrypt-redacted`, `pfsense-keys-redacted`) reject a commit whose `config.xml` still carries
+a live hash, key or secret — a backstop for a skipped run, not a replacement for it.
+
+The tool is idempotent: running it over the committed `config.xml` reproduces that file byte for
+byte, so drift between the script and the file it is supposed to produce shows up as a diff.
 
 ---
 

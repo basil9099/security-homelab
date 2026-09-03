@@ -8,7 +8,7 @@
 -->
 <pfsense>
   <version>22.9</version>
-  <lastchange></lastchange>
+  <lastchange/>
   <theme>pfSense</theme>
   <sysctl/>
   <system>
