@@ -105,6 +105,16 @@ class SSHHandler(ProtocolHandler):
 
     PROTOCOL_NAME = "ssh"
 
+    def bind(self) -> None:
+        """Refuse to claim the port when SSH emulation cannot actually run.
+
+        Reported to the caller before it announces the service, rather than
+        printed from inside the listener thread after the fact.
+        """
+        if not _HAS_PARAMIKO:
+            raise RuntimeError("paramiko not installed — SSH honeypot unavailable")
+        super().bind()
+
     def start(self) -> None:
         if not _HAS_PARAMIKO:
             print("[!] paramiko not installed — SSH honeypot disabled")

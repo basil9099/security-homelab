@@ -144,6 +144,16 @@ class ProtocolHandler(ABC):
         """
         return (self._config.bind_host, self._config.port)
 
+    def bind(self) -> None:
+        """Claim the listening address.
+
+        Call this from the main thread *before* starting the handler's thread:
+        a bind that fails inside the thread kills it silently, and the caller
+        goes on to report a service that is not listening. Raises OSError when
+        the address is unavailable (in use, privileged, or not local).
+        """
+        self._bind_server()
+
     def _bind_server(self) -> socket.socket:
         """Create, bind, and return a listening TCP socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -158,8 +168,12 @@ class ProtocolHandler(ABC):
         self,
         handle: Callable[[socket.socket, tuple[str, int]], None],
     ) -> None:
-        """Bind, then accept until stopped, dispatching each client to *handle*."""
-        sock = self._bind_server()
+        """Accept until stopped, dispatching each client to *handle*.
+
+        Uses the socket bind() already claimed, binding here only if the caller
+        skipped that step.
+        """
+        sock = self._server_socket or self._bind_server()
         while not self._stop_event.is_set():
             try:
                 conn, addr = sock.accept()

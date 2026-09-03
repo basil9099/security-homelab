@@ -76,7 +76,23 @@ class HTTPHandler(ProtocolHandler):
 
     PROTOCOL_NAME = "http"
 
+    def bind(self) -> None:
+        """Construct the HTTPServer, which claims the port on creation."""
+        server = HTTPServer(self.bind_address(), self._make_request_handler())
+        server.timeout = 1.0
+        self._http_server = server
+
     def start(self) -> None:
+        if getattr(self, "_http_server", None) is None:
+            self.bind()
+        server = self._http_server
+
+        while not self._stop_event.is_set():
+            server.handle_request()
+
+        server.server_close()
+
+    def _make_request_handler(self) -> type[BaseHTTPRequestHandler]:
         handler = self
         server_banner = self._config.banner or "Apache/2.4.41 (Ubuntu)"
         port = self._config.port
@@ -182,14 +198,7 @@ class HTTPHandler(ProtocolHandler):
                 self.end_headers()
                 self.wfile.write(body.encode("utf-8"))
 
-        server = HTTPServer(self.bind_address(), _RequestHandler)
-        server.timeout = 1.0
-        self._http_server = server
-
-        while not self._stop_event.is_set():
-            server.handle_request()
-
-        server.server_close()
+        return _RequestHandler
 
     def stop(self) -> None:
         self._stop_event.set()

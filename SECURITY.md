@@ -20,7 +20,7 @@ history, or a dependency vulnerability — please report it privately rather tha
 opening a public issue:
 
 1. **Preferred:** open a private report via GitHub's
-   [Security Advisories](https://github.com/basil9099/cybersecurity-homelab/security/advisories/new)
+   [Security Advisories](https://github.com/basil9099/security-homelab/security/advisories/new)
    ("Report a vulnerability").
 2. Alternatively, reach out through the
    [LinkedIn profile](https://www.linkedin.com/in/angus-dawson-92b035249) linked

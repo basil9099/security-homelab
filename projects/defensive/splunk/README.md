@@ -107,7 +107,7 @@ index=wineventlog EventCode=4625
 | where count > 5
 ```
 
-Full walkthrough with screenshots: [brute-force-detection-simulation/notes.md](brute-force-detection-simulation/notes.md).
+Full walkthrough with screenshots: [brute-force-detection-simulation/README.md](brute-force-detection-simulation/README.md).
 
 ---
 

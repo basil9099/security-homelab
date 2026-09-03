@@ -25,7 +25,6 @@ detect against.
 |---|---|---|
 | [Honeypot](projects/offensive/honeypot/) | Multi-protocol honeypot (SSH/HTTP/FTP/Telnet) with a live dashboard | Python, Paramiko |
 | [Network Vulnerability Scanner](projects/offensive/network-vulnerability-scanner/) | Port scanning, banner grabbing, and CVE lookup with reporting | Python, Nmap, NVD |
-| [HackTheBox Writeups](projects/offensive/htb_writeups/) | Documented walkthroughs of retired HTB machines and homelab exercises | — |
 | [LLM Injection Lab](https://github.com/basil9099/llm-injection-lab) | Prompt-injection red-team harness measuring LLM application defenses across three hardening tiers | Python, garak, Ollama, FastAPI |
 
 ## The Lab
@@ -36,7 +35,7 @@ generate realistic activity, which flows through the network and endpoint sensor
 into Splunk for detection.
 
 - [Defensive architecture](docs/defensive-architecture.md) — how the pieces connect
-- [Network topology](docs/diagrams/lab-network.mmd) — the physical VM/network layout
+- [Network topology](projects/defensive/pfsense_firewall/docs/topology.md) — the physical VM/network layout
 
 ## Links
 

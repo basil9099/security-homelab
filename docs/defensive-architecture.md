@@ -11,7 +11,7 @@ but the forwarding glue isn't wired yet). Each edge is tagged in the
 
 For the physical VM/network layout (pfSense, Kali, Windows AD + Splunk,
 Metasploitable, Ubuntu Blue Team), see
-[`diagrams/lab-network.mmd`](diagrams/lab-network.mmd).
+[`pfsense_firewall/docs/topology.md`](../projects/defensive/pfsense_firewall/docs/topology.md).
 
 ---
 
@@ -77,7 +77,7 @@ flowchart TB
 | 1 | [Windows Server + AD](../projects/defensive/windows_server_with_AD/) | [Splunk](../projects/defensive/splunk/) | Sysmon + Windows Security event logs via Universal Forwarder | implemented |
 | 2 | [pfSense](../projects/defensive/pfsense_firewall/) | [Splunk](../projects/defensive/splunk/) | Firewall + Suricata IDS alerts | illustrative |
 | 3 | [Honeypot](../projects/offensive/honeypot/) | [Splunk](../projects/defensive/splunk/) | Honeypot session events (SSH/HTTP/FTP/Telnet) | illustrative |
-| 4 | [Vulnerability Scanner](../projects/offensive/vulnerability_scanner/) | [pfSense](../projects/defensive/pfsense_firewall/) / Suricata | Port-scan and probe traffic the IDS should flag | illustrative |
+| 4 | [Vulnerability Scanner](../projects/offensive/network-vulnerability-scanner/) | [pfSense](../projects/defensive/pfsense_firewall/) / Suricata | Port-scan and probe traffic the IDS should flag | illustrative |
 
 ---
 
@@ -101,5 +101,5 @@ sources as further inputs.
 ## Related documents
 
 - [Main README](../README.md) — per-project index with tech stacks
-- [`docs/diagrams/lab-network.mmd`](diagrams/lab-network.mmd) — physical VM /
-  network topology
+- [`pfsense_firewall/docs/topology.md`](../projects/defensive/pfsense_firewall/docs/topology.md) — physical
+  VM / network topology

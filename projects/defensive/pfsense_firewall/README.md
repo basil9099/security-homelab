@@ -142,4 +142,4 @@ The sanitiser is the gatekeeper — it must run before commit. A pre-commit hook
 - Trigger a pfBlockerNG DNSBL hit from WKSTN01 → confirm it appears in the Suricata / pfBlockerNG logs (and in Splunk if you forward them)
 - Port-scan across the LAN→MGMT boundary and verify the block rule + Suricata alerts
 - Simulate a DNS tunnel from WKSTN01 and detect it with Suricata + the Unbound query log
-- Use `../../offensive/vulnerability_scanner/` against the pfSense WAN — default deny should return nothing
+- Use `../../offensive/network-vulnerability-scanner/` against the pfSense WAN — default deny should return nothing

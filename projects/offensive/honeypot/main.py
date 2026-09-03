@@ -31,6 +31,7 @@ from event_logger import EventLogger
 
 # ANSI colours — handled natively by Windows 10+ consoles and every POSIX terminal.
 CYAN, GREEN, YELLOW, RESET = "\033[36m", "\033[32m", "\033[33m", "\033[0m"
+RED = "\033[31m"
 
 
 def _print_banner() -> None:
@@ -130,19 +131,18 @@ def _run_live(
         print("[!] No protocol handlers to start. Exiting.")
         return
 
-    # Start each handler in its own daemon thread
-    threads: list[threading.Thread] = []
-    for h in handlers:
-        t = threading.Thread(target=h.start, name=f"proto-{h.PROTOCOL_NAME}", daemon=True)
-        t.start()
-        threads.append(t)
-        host, port = h.bind_address()
-        print(
-            f"  {GREEN}[+]{RESET} {h.PROTOCOL_NAME.upper():8s} "
-            f"listening on {host}:{port}"
-        )
+    threads, failures = start_handlers(handlers)
 
-    exposed = sorted({h.bind_address()[0] for h in handlers} - {"127.0.0.1", "localhost"})
+    for name, reason in failures:
+        print(f"  {RED}[-]{RESET} {name.upper():8s} failed to start: {reason}")
+
+    if not threads:
+        print()
+        print(f"  {RED}[-]{RESET} No listener started. Exiting.")
+        return
+
+    started = [h for h in handlers if h.PROTOCOL_NAME not in {n for n, _ in failures}]
+    exposed = sorted({h.bind_address()[0] for h in started} - {"127.0.0.1", "localhost"})
     if exposed:
         print()
         print(f"  {YELLOW}[!]{RESET} Reachable from the network on {', '.join(exposed)}.")
@@ -222,6 +222,36 @@ def _run_dashboard(
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
+def start_handlers(
+    handlers: list,
+) -> tuple[list[threading.Thread], list[tuple[str, str]]]:
+    """Bind every handler, then start a thread for each one that bound.
+
+    Binding first is what makes the "listening on ..." line true: a bind that
+    fails inside the listener thread kills it silently, leaving the banner
+    advertising a service that never came up.
+
+    Returns (threads, failures) where failures is [(protocol_name, reason)].
+    """
+    threads: list[threading.Thread] = []
+    failures: list[tuple[str, str]] = []
+
+    for h in handlers:
+        try:
+            h.bind()
+        except (OSError, RuntimeError) as exc:
+            failures.append((h.PROTOCOL_NAME, str(exc)))
+            continue
+
+        t = threading.Thread(target=h.start, name=f"proto-{h.PROTOCOL_NAME}", daemon=True)
+        t.start()
+        threads.append(t)
+        host, port = h.bind_address()
+        print(f"  {GREEN}[+]{RESET} {h.PROTOCOL_NAME.upper():8s} listening on {host}:{port}")
+
+    return threads, failures
+
 
 def main() -> None:
     args = _build_parser().parse_args()

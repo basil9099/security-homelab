@@ -1,4 +1,4 @@
-# Repo-wide tooling configuration for the cybersecurity-homelab monorepo.
+# Repo-wide tooling configuration for the security-homelab monorepo.
 #
 # This repo is a collection of independent security tools and labs, each with
 # its own `requirements.txt`. There is intentionally no packaging metadata here
