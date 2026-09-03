@@ -136,10 +136,17 @@ def _run_live(
         t = threading.Thread(target=h.start, name=f"proto-{h.PROTOCOL_NAME}", daemon=True)
         t.start()
         threads.append(t)
+        host, port = h.bind_address()
         print(
             f"  {GREEN}[+]{RESET} {h.PROTOCOL_NAME.upper():8s} "
-            f"listening on port {h._config.port}"
+            f"listening on {host}:{port}"
         )
+
+    exposed = sorted({h.bind_address()[0] for h in handlers} - {"127.0.0.1", "localhost"})
+    if exposed:
+        print()
+        print(f"  {YELLOW}[!]{RESET} Reachable from the network on {', '.join(exposed)}.")
+        print(f"  {YELLOW}[!]{RESET} Only do this on an isolated lab segment.")
 
     print()
 

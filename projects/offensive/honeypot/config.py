@@ -4,7 +4,9 @@ config.py
 Configuration loading for the honeypot system.
 
 Reads from a YAML file when available, otherwise uses sensible defaults.
-All ports default to high (unprivileged) values so no root is required.
+All ports default to high (unprivileged) values so no root is required, and
+listeners bind loopback only — exposing the honeypot to the network is an
+explicit opt-in via the `network.bind_host` key.
 """
 
 from __future__ import annotations
@@ -20,6 +22,10 @@ class ProtocolConfig:
     enabled: bool = True
     port: int = 0
     banner: str = ""
+    # Loopback by default: a honeypot that grabs every interface the moment it
+    # starts is a liability on a workstation or any box with a routable address.
+    # Set network.bind_host (or a per-protocol bind_host) to expose it.
+    bind_host: str = "127.0.0.1"
 
 
 @dataclass
@@ -82,6 +88,11 @@ class HoneypotConfig:
 
         cfg = cls.default()
 
+        # Network section — global bind host, overridable per protocol.
+        global_bind = raw.get("network", {}).get("bind_host", ProtocolConfig.bind_host)
+        for proto in cfg.protocols.values():
+            proto.bind_host = global_bind
+
         # Protocols section
         for name, proto_data in raw.get("protocols", {}).items():
             if not isinstance(proto_data, dict):
@@ -90,6 +101,7 @@ class HoneypotConfig:
             existing.enabled = proto_data.get("enabled", existing.enabled)
             existing.port = proto_data.get("port", existing.port)
             existing.banner = proto_data.get("banner", existing.banner)
+            existing.bind_host = proto_data.get("bind_host", global_bind)
             cfg.protocols[name] = existing
 
         # Logging section

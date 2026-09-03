@@ -30,3 +30,26 @@ Thumbs.db
 # Honeypot runtime artifacts
 *.jsonl
 .ssh_host_key
+
+# Ansible secrets and fetched collections
+.vault_pass
+!.vault_pass.example
+.collections/
+*.retry
+
+# Vagrant runtime state (.vagrant/machines/*/private_key is a real SSH key)
+.vagrant/
+
+# Packer build artifacts and caches (multi-GB, and images carry lab credentials)
+packer_cache/
+output-*/
+*.box
+*.vmdk
+*.vhd
+*.vhdx
+*.iso
+
+# Unsanitised device exports — pfSense backups download as config-<host>-<date>.xml.
+# The committed, sanitised config.xml is deliberately not matched by this.
+projects/defensive/pfsense_firewall/config/config-*.xml
+projects/defensive/pfsense_firewall/config/exported-config.xml

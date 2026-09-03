@@ -182,7 +182,7 @@ class HTTPHandler(ProtocolHandler):
                 self.end_headers()
                 self.wfile.write(body.encode("utf-8"))
 
-        server = HTTPServer(("0.0.0.0", self._config.port), _RequestHandler)
+        server = HTTPServer(self.bind_address(), _RequestHandler)
         server.timeout = 1.0
         self._http_server = server
 

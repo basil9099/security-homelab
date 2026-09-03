@@ -3,6 +3,13 @@
 # All ports use high (unprivileged) values by default.
 # Use iptables port forwarding to map standard ports if needed.
 
+network:
+  # Listeners bind loopback only unless you change this. Set "0.0.0.0" to accept
+  # connections from the network — do that only on an isolated lab segment, never
+  # on a workstation or anything with a routable address. Individual protocols
+  # can override it with their own bind_host key.
+  bind_host: "127.0.0.1"
+
 protocols:
   ssh:
     enabled: true

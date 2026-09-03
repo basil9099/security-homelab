@@ -216,9 +216,28 @@ cat honeypot_events.jsonl | python -m json.tool --no-ensure-ascii
 
 ---
 
-## Port Forwarding (Optional)
+## Network Exposure (Optional)
 
-To listen on standard ports without root, use iptables:
+Listeners bind `127.0.0.1` only. Nothing outside the host can reach the honeypot
+until you say so — set `network.bind_host` in `honeypot.yaml`:
+
+```yaml
+network:
+  bind_host: "0.0.0.0"    # accept connections from the network
+```
+
+Individual protocols can override it with their own `bind_host`, so you can
+expose HTTP while keeping SSH on loopback. On startup the banner prints the
+address each listener actually bound, and warns when any of them is non-loopback.
+
+Only do this on an isolated lab segment. Exposing an emulated-shell service on a
+workstation, a routable address, or anything sharing a network with real systems
+is asking for trouble — and in most jurisdictions you are responsible for traffic
+that originates from it.
+
+### Standard ports
+
+With exposure enabled, iptables can map the standard ports without running as root:
 
 ```bash
 sudo iptables -t nat -A PREROUTING -p tcp --dport 22 -j REDIRECT --to-port 2222

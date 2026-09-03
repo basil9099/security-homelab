@@ -136,12 +136,20 @@ class ProtocolHandler(ABC):
             metadata=metadata or {},
         )
 
+    def bind_address(self) -> tuple[str, int]:
+        """The (host, port) this handler listens on.
+
+        Single source of truth for every listener so no protocol can quietly
+        bind a wider interface than the configuration asked for.
+        """
+        return (self._config.bind_host, self._config.port)
+
     def _bind_server(self) -> socket.socket:
         """Create, bind, and return a listening TCP socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.settimeout(1.0)  # allow periodic stop-event checks
-        sock.bind(("0.0.0.0", self._config.port))
+        sock.bind(self.bind_address())
         sock.listen(5)
         self._server_socket = sock
         return sock
