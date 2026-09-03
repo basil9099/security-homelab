@@ -1798,7 +1798,13 @@ cd /c/Users/angus/projects/llm-injection-lab && git add -A && git commit -m "Mar
 | `guarded` | **+29 pts** | +13.4 pts | -12 pts |
 ```
 
-The unlabelled column is the pooled-ASR reduction. Correct the header to `| Tier | Macro ASR reduction | Pooled ASR reduction | Utility change |` and check the HTML renderer for the same mismatch. Re-render the run and confirm the columns line up before writing any documentation that quotes them.
+The unlabelled column is the pooled-ASR reduction. Correct the header to `| Tier | Macro ASR reduction | Pooled ASR reduction | Utility change |` and check the HTML renderer for the same mismatch.
+
+**Also fix literal backticks in the HTML report.** `detector_caveat_note()` in `report/profile.py` builds one shared caveat sentence for Markdown, HTML and the console, and it wraps the detector name in Markdown backticks. Markdown renders those as code; **HTML renders them as literal backtick characters**, so the published HTML report currently contains ``score with garak's `mitigation.MitigationBypass` detector`` with visible punctuation. The same flaw already affects `_macro_asr_note` in that file.
+
+Fix it so each surface gets correct markup for its format — for example, have the shared function return the sentence with a placeholder or return the detector name separately, and let each renderer wrap it (`` `x` `` for Markdown, `<code>x</code>` for HTML, a Rich style for console). Do not solve it by un-sharing the string; the sharing was deliberate and correct.
+
+Re-render the run and confirm both the column alignment and the absence of stray backticks in the HTML **before** writing any documentation that quotes them, and before taking screenshots — Step 6 captures that HTML into the published README.
 
 - [ ] **Step 1: Rewrite `FINDINGS.md` against the real numbers**
 
