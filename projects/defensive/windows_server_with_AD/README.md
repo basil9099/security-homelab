@@ -35,7 +35,11 @@ Part of the **Defensive Security** track. Sits on the same `10.10.10.0/24` LAN a
  └────────────────────────────────────────────────────────┘
 ```
 
-See [`docs/topology.md`](docs/topology.md) for the full diagram.
+The network those three stages produce:
+
+![Active Directory lab topology: a pfSense gateway fronts a single flat LAN holding the DC01 domain controller and the domain-joined WKSTN01 workstation, which authenticates against DC01 over Kerberos, LDAP and SMB.](docs/diagrams/ad-topology.svg)
+
+See [`docs/topology.md`](docs/topology.md) for the host-role and subnet rationale.
 
 ---
 

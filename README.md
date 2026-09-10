@@ -34,6 +34,8 @@ against a [GOAD-Light](https://github.com/Orange-Cyberdefense/GOAD) deployment �
 generate realistic activity, which flows through the network and endpoint sensors
 into Splunk for detection.
 
+![Layered defensive architecture: simulated adversary tooling feeds perimeter and endpoint sensors, which forward telemetry to Splunk. Only the Windows Server Sysmon feed is implemented today; the other three flows are illustrative.](docs/diagrams/defensive-architecture.svg)
+
 - [Defensive architecture](docs/defensive-architecture.md) — how the pieces connect
 - [Network topology](projects/defensive/pfsense_firewall/docs/topology.md) — the physical VM/network layout
 

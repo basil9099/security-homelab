@@ -65,7 +65,7 @@ pfsense_firewall/
 │       ├── dhcp_dns.yml
 │       └── ids_packages.yml
 └── docs/
-    ├── topology.md             # Mermaid network diagram + segmentation rationale
+    ├── topology.md             # network diagram + segmentation rationale
     └── bootstrap.md            # step-by-step first install
 ```
 
@@ -115,6 +115,8 @@ Edit the YAML, re-run the playbook. Never click in the WebGUI for anything that'
 | Everything             | —                                     | `ansible-playbook playbooks/site.yml`               |
 
 ## Segmentation model
+
+![pfSense network topology: a single firewall separates the untrusted WAN from the user LAN and the management segment. Admins may reach the LAN from management, but traffic from the LAN into the management segment is blocked by rule.](docs/diagrams/pfsense-topology.svg)
 
 See [`docs/topology.md`](docs/topology.md) — LAN is the everyday subnet, MGMT is locked
 down, `LAN → MGMT` is explicitly blocked so detection engineering works against a
