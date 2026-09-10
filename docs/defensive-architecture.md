@@ -17,56 +17,21 @@ Metasploitable, Ubuntu Blue Team), see
 
 ## Layered Architecture
 
-```mermaid
-flowchart TB
-    %% ─────────── ADVERSARY SIMULATION ───────────
-    subgraph ADV["Adversary Simulation (offensive/)"]
-        direction LR
-        HONEYPOT["Honeypot"]
-        SCANNER["Vulnerability<br/>Scanner"]
-    end
+![Layered defensive architecture: simulated adversary tooling feeds perimeter and endpoint sensors, which forward telemetry to Splunk. Only the Windows Server Sysmon feed is implemented today; the other three flows are illustrative.](diagrams/defensive-architecture.svg)
 
-    %% ─────────── INGESTION ───────────
-    subgraph ING["Ingestion (infra + sensors)"]
-        direction LR
-        PFSENSE["pfSense<br/>FW + Suricata IDS"]
-        ADSRV["Windows Server<br/>+ AD + Sysmon"]
-    end
-
-    %% ─────────── DETECTION ───────────
-    subgraph DET["Detection"]
-        SPLUNK["Splunk SIEM"]
-    end
-
-    %% ─────────── ADVERSARY → INGESTION ───────────
-    SCANNER  -.-> PFSENSE
-    HONEYPOT -.-> SPLUNK
-
-    %% ─────────── INGESTION → DETECTION ───────────
-    ADSRV   --> SPLUNK
-    PFSENSE -.-> SPLUNK
-
-    %% ─────────── STYLING ───────────
-    classDef adv fill:#3a1f1f,stroke:#a33,color:#fff;
-    classDef ing fill:#1f2a3a,stroke:#36c,color:#fff;
-    classDef det fill:#1f3a2a,stroke:#3a6,color:#fff;
-
-    class HONEYPOT,SCANNER adv;
-    class PFSENSE,ADSRV ing;
-    class SPLUNK det;
-```
+<sub>Source: [`diagrams/defensive-architecture.html`](diagrams/defensive-architecture.html)</sub>
 
 ---
 
 ## How to read the diagram
 
-- **Layers stack top-to-bottom.** Simulated adversary activity enters at the
-  top, perimeter and endpoint sensors capture it in the middle, and Splunk
-  produces detections at the bottom.
-- **Solid arrows (`-->`)** mark flows implemented today — a log source that is
-  actually forwarded into Splunk and searchable.
-- **Dashed arrows (`-.->`)** mark illustrative flows — the sensor and Splunk
-  both exist, but the forwarding glue isn't wired yet.
+- **Layers run left to right.** Simulated adversary activity enters on the
+  left, perimeter and endpoint sensors capture it in the middle, and Splunk
+  produces detections on the right.
+- **The solid green arrow** marks the one flow implemented today — a log source
+  that is actually forwarded into Splunk and searchable.
+- **Dashed grey arrows** mark illustrative flows — the sensor and Splunk both
+  exist, but the forwarding glue isn't wired yet.
 
 ---
 

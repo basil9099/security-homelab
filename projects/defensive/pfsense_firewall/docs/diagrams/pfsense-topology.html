@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pfSense Network Topology</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --plate:  #1c2128;
+      --ink:    #e6e9ee;
+      --muted:  #8792a3;
+      --accent: #3ddc84;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: #0d1117;
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 3rem 2rem;
+    }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow {
+      font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-family: var(--font-sans); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem);
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+      color: var(--ink); margin-bottom: 1.5rem;
+    }
+    svg { width: 100%; min-width: 900px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <p class="eyebrow">Architecture · Secure paved road</p>
+    <h1>pfSense Network Topology</h1>
+
+    <svg viewBox="0 0 960 496" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pfsense-topology-title pfsense-topology-desc">
+      <title id="pfsense-topology-title">pfSense Network Topology</title>
+      <desc id="pfsense-topology-desc">A single pfSense firewall separates the untrusted WAN from a user LAN and a management segment; admins may reach the LAN from management, but traffic from the LAN into the management segment is blocked by rule.</desc>
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#8792a3"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#3ddc84"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#1c2128"/>
+
+      <!-- trust zones (painted first) -->
+      <rect x="40" y="160" width="364" height="124" rx="8" fill="rgba(230,233,238,0.03)" stroke="rgba(230,233,238,0.10)" stroke-width="0.8"/>
+      <rect x="56" y="164" width="96" height="12" rx="2" fill="#1c2128"/>
+      <text x="104" y="173" fill="rgba(230,233,238,0.40)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.14em">WAN · UNTRUSTED</text>
+
+      <rect x="680" y="56" width="240" height="148" rx="8" fill="rgba(230,233,238,0.03)" stroke="rgba(230,233,238,0.10)" stroke-width="0.8"/>
+      <rect x="696" y="60" width="112" height="12" rx="2" fill="#1c2128"/>
+      <text x="752" y="69" fill="rgba(230,233,238,0.40)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.14em">LAN · 10.10.10.0/24</text>
+
+      <rect x="680" y="248" width="240" height="148" rx="8" fill="rgba(230,233,238,0.03)" stroke="rgba(230,233,238,0.10)" stroke-width="0.8"/>
+      <rect x="696" y="252" width="144" height="12" rx="2" fill="#1c2128"/>
+      <text x="768" y="261" fill="rgba(230,233,238,0.40)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.14em">OPT1 / MGMT · 10.10.20.0/24</text>
+
+      <!-- arrows (drawn before boxes) -->
+      <line x1="176" y1="228" x2="216" y2="228" stroke="#8792a3" stroke-width="1" marker-end="url(#arrow)"/>
+      <line x1="384" y1="228" x2="452" y2="228" stroke="#8792a3" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <path d="M 628,212 H 656 Q 664,212 664,204 V 144 Q 664,136 672,136 H 696" fill="none" stroke="#8792a3" stroke-width="1" marker-end="url(#arrow)"/>
+      <path d="M 628,240 H 656 Q 664,240 664,248 V 320 Q 664,328 672,328 H 696" fill="none" stroke="#8792a3" stroke-width="1" marker-end="url(#arrow)"/>
+
+      <!-- permitted: MGMT -> LAN (admin jump path) -->
+      <line x1="760" y1="280" x2="760" y2="184" stroke="#8792a3" stroke-width="1" marker-end="url(#arrow)"/>
+      <rect x="708" y="210" width="44" height="12" rx="2" fill="#1c2128"/>
+      <text x="730" y="219" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">ADMIN</text>
+
+      <!-- forbidden: LAN -> MGMT, stopped at the trust boundary -->
+      <line x1="864" y1="184" x2="864" y2="240" stroke="#ff6b6b" stroke-width="1.2" stroke-dasharray="4,4"/>
+      <line x1="848" y1="240" x2="880" y2="240" stroke="#ff6b6b" stroke-width="2.4"/>
+      <rect x="800" y="210" width="52" height="12" rx="2" fill="#1c2128"/>
+      <text x="826" y="219" fill="#ff6b6b" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">BLOCKED</text>
+
+      <!-- nodes -->
+      <rect x="56" y="200" width="120" height="56" rx="6" fill="#1c2128"/>
+      <rect x="56" y="200" width="120" height="56" rx="6" fill="rgba(230,233,238,0.03)" stroke="rgba(230,233,238,0.30)" stroke-width="1"/>
+      <text x="116" y="228" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">Internet</text>
+      <text x="116" y="244" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">home router</text>
+
+      <rect x="216" y="192" width="168" height="72" rx="6" fill="#1c2128"/>
+      <rect x="216" y="192" width="168" height="72" rx="6" fill="rgba(135,146,163,0.10)" stroke="#7d8899" stroke-width="1"/>
+      <rect x="224" y="200" width="28" height="12" rx="2" fill="none" stroke="rgba(125,136,153,0.40)" stroke-width="0.8"/>
+      <text x="238" y="209" fill="rgba(125,136,153,0.90)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">WAN</text>
+      <text x="300" y="234" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">WAN interface</text>
+      <text x="300" y="250" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">vmx0 / vmnet0 · dhcp</text>
+
+      <rect x="452" y="184" width="176" height="88" rx="6" fill="#1c2128"/>
+      <rect x="452" y="184" width="176" height="88" rx="6" fill="rgba(61,220,132,0.10)" stroke="#3ddc84" stroke-width="1"/>
+      <rect x="460" y="192" width="32" height="12" rx="2" fill="none" stroke="rgba(61,220,132,0.40)" stroke-width="0.8"/>
+      <text x="476" y="201" fill="rgba(61,220,132,0.90)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">GATE</text>
+      <text x="540" y="232" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">pfSense CE 2.7.x</text>
+      <text x="540" y="250" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">vmx0 · vmx1 · vmx2</text>
+      <text x="540" y="264" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">blockpriv on wan</text>
+
+      <rect x="696" y="88" width="208" height="96" rx="6" fill="#1c2128"/>
+      <rect x="696" y="88" width="208" height="96" rx="6" fill="#262c36" stroke="#e6e9ee" stroke-width="1"/>
+      <rect x="704" y="96" width="40" height="12" rx="2" fill="none" stroke="rgba(230,233,238,0.40)" stroke-width="0.8"/>
+      <text x="724" y="105" fill="rgba(230,233,238,0.80)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HOSTS</text>
+      <text x="800" y="132" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">DC01 · WKSTN01</text>
+      <text x="800" y="152" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">10.10.10.10 · 10.10.10.20</text>
+      <text x="800" y="168" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">vmx1 / vmnet2 · dhcp .100-.200</text>
+
+      <rect x="696" y="280" width="208" height="96" rx="6" fill="#1c2128"/>
+      <rect x="696" y="280" width="208" height="96" rx="6" fill="rgba(230,233,238,0.05)" stroke="#8792a3" stroke-width="1"/>
+      <rect x="704" y="288" width="40" height="12" rx="2" fill="none" stroke="rgba(135,146,163,0.40)" stroke-width="0.8"/>
+      <text x="724" y="297" fill="rgba(135,146,163,0.90)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">HOSTS</text>
+      <text x="800" y="324" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">Splunk · Admin jump</text>
+      <text x="800" y="344" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">indexer 10.10.20.50</text>
+      <text x="800" y="360" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">vmx2 / vmnet3</text>
+
+      <!-- legend -->
+      <line x1="40" y1="436" x2="920" y2="436" stroke="rgba(230,233,238,0.10)" stroke-width="0.8"/>
+      <text x="40" y="460" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+
+      <rect x="136" y="448" width="16" height="12" rx="2" fill="rgba(61,220,132,0.10)" stroke="#3ddc84" stroke-width="0.8"/>
+      <text x="164" y="460" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">ENFORCEMENT POINT</text>
+
+      <line x1="392" y1="456" x2="420" y2="456" stroke="#8792a3" stroke-width="1" marker-end="url(#arrow)"/>
+      <text x="436" y="460" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">PERMITTED</text>
+
+      <line x1="600" y1="456" x2="624" y2="456" stroke="#ff6b6b" stroke-width="1.2" stroke-dasharray="4,4"/>
+      <line x1="624" y1="448" x2="624" y2="464" stroke="#ff6b6b" stroke-width="2.4"/>
+      <text x="640" y="460" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">BLOCKED BY RULE</text>
+    </svg>
+  </div>
+</body>
+</html>

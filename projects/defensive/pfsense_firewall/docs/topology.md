@@ -1,19 +1,8 @@
 # pfSense Network Topology
 
-```mermaid
-flowchart LR
-    INET((Internet)) --> WAN
-    WAN["WAN<br/>vmx0 / vmnet0<br/>DHCP from home router"] --> PF{{pfSense CE 2.7.x}}
-    PF --> LAN["LAN<br/>vmx1 / vmnet2<br/>10.10.10.0/24"]
-    PF --> MGMT["OPT1 / MGMT<br/>vmx2 / vmnet3<br/>10.10.20.0/24"]
+![pfSense network topology: a single firewall separates the untrusted WAN from the user LAN and the management segment. Admins may reach the LAN from management, but traffic from the LAN into the management segment is blocked by rule.](diagrams/pfsense-topology.svg)
 
-    LAN --> DC[DC01 10.10.10.10]
-    LAN --> WS[WKSTN01 10.10.10.20]
-    LAN --> DHCPPOOL["DHCP 10.10.10.100-200"]
-
-    MGMT --> ADMIN[Admin jump host]
-    MGMT --> SPLUNK[Splunk indexer 10.10.20.50]
-```
+<sub>Source: [`diagrams/pfsense-topology.html`](diagrams/pfsense-topology.html)</sub>
 
 ## Segmentation rules (summary)
 

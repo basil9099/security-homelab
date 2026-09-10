@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 432" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ad-topology-title ad-topology-desc">
+      <title id="ad-topology-title">Active Directory Lab Topology</title>
+      <desc id="ad-topology-desc">A pfSense gateway fronts a single flat LAN holding a Windows Server domain controller and one domain-joined workstation, which authenticates against the controller over Kerberos, LDAP and SMB.</desc>
+      <defs>
+        <style>@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap');</style>
+        <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#8792a3"/></marker>
+        <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#3ddc84"/></marker>
+      </defs>
+
+      <rect width="100%" height="100%" fill="#1c2128"/>
+
+      <!-- zones (painted first) -->
+      <rect x="40" y="140" width="216" height="108" rx="8" fill="#e6e9ee" fill-opacity="0.03" stroke="#e6e9ee" stroke-opacity="0.10" stroke-width="0.8"/>
+      <rect x="56" y="144" width="104" height="12" rx="2" fill="#1c2128"/>
+      <text x="108" y="153" fill="#e6e9ee" fill-opacity="0.40" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.14em">WAN · HOME ROUTER</text>
+
+      <rect x="584" y="56" width="336" height="276" rx="8" fill="#e6e9ee" fill-opacity="0.03" stroke="#e6e9ee" stroke-opacity="0.10" stroke-width="0.8"/>
+      <rect x="600" y="60" width="112" height="12" rx="2" fill="#1c2128"/>
+      <text x="656" y="69" fill="#e6e9ee" fill-opacity="0.40" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.14em">LAN · 10.10.10.0/24</text>
+
+      <!-- links (drawn before boxes) -->
+      <line x1="240" y1="200" x2="336" y2="200" stroke="#8792a3" stroke-width="1"/>
+
+      <path d="M 528,184 H 564 Q 572,184 572,176 V 136 Q 572,128 580,128 H 616" fill="none" stroke="#8792a3" stroke-width="1"/>
+      <path d="M 528,216 H 564 Q 572,216 572,224 V 264 Q 572,272 580,272 H 616" fill="none" stroke="#8792a3" stroke-width="1"/>
+
+      <!-- authentication flow -->
+      <line x1="752" y1="232" x2="752" y2="168" stroke="#3ddc84" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <rect x="762" y="194" width="40" height="12" rx="2" fill="#1c2128"/>
+      <text x="782" y="203" fill="#3ddc84" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">AUTH</text>
+
+      <!-- nodes -->
+      <rect x="56" y="172" width="184" height="56" rx="6" fill="#1c2128"/>
+      <rect x="56" y="172" width="184" height="56" rx="6" fill="#e6e9ee" fill-opacity="0.03" stroke="#e6e9ee" stroke-opacity="0.30" stroke-width="1"/>
+      <text x="148" y="200" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">Internet</text>
+      <text x="148" y="216" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">upstream dhcp</text>
+
+      <rect x="336" y="156" width="192" height="88" rx="6" fill="#1c2128"/>
+      <rect x="336" y="156" width="192" height="88" rx="6" fill="#262c36" stroke="#e6e9ee" stroke-width="1"/>
+      <rect x="344" y="164" width="24" height="12" rx="2" fill="none" stroke="#e6e9ee" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="356" y="173" fill="#e6e9ee" fill-opacity="0.80" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">FW</text>
+      <text x="432" y="204" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">pfSense</text>
+      <text x="432" y="222" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">10.10.10.1</text>
+      <text x="432" y="236" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">firewall · dhcp · dns forwarder</text>
+
+      <rect x="616" y="88" width="272" height="80" rx="6" fill="#1c2128"/>
+      <rect x="616" y="88" width="272" height="80" rx="6" fill="#3ddc84" fill-opacity="0.10" stroke="#3ddc84" stroke-width="1"/>
+      <rect x="624" y="96" width="24" height="12" rx="2" fill="none" stroke="#3ddc84" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="636" y="105" fill="#3ddc84" fill-opacity="0.90" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">DC</text>
+      <text x="752" y="130" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">DC01 · Windows Server 2022</text>
+      <text x="752" y="146" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">10.10.10.10 · homelab.local</text>
+      <text x="752" y="160" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">kerberos · ldap · smb · gc</text>
+
+      <rect x="616" y="232" width="272" height="80" rx="6" fill="#1c2128"/>
+      <rect x="616" y="232" width="272" height="80" rx="6" fill="#8792a3" fill-opacity="0.10" stroke="#7d8899" stroke-width="1"/>
+      <rect x="624" y="240" width="44" height="12" rx="2" fill="none" stroke="#7d8899" stroke-opacity="0.40" stroke-width="0.8"/>
+      <text x="646" y="249" fill="#7d8899" fill-opacity="0.90" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">CLIENT</text>
+      <text x="752" y="274" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">WKSTN01 · Windows 10/11</text>
+      <text x="752" y="290" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">10.10.10.20</text>
+      <text x="752" y="304" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">domain-joined</text>
+
+      <!-- legend -->
+      <line x1="40" y1="372" x2="920" y2="372" stroke="#e6e9ee" stroke-opacity="0.10" stroke-width="0.8"/>
+      <text x="40" y="396" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+
+      <line x1="136" y1="392" x2="168" y2="392" stroke="#8792a3" stroke-width="1"/>
+      <text x="184" y="396" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">NETWORK LINK</text>
+
+      <line x1="360" y1="392" x2="388" y2="392" stroke="#3ddc84" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+      <text x="404" y="396" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">AUTHENTICATION</text>
+
+      <rect x="608" y="384" width="16" height="12" rx="2" fill="#3ddc84" fill-opacity="0.10" stroke="#3ddc84" stroke-width="0.8"/>
+      <text x="636" y="396" fill="#8792a3" font-size="8" font-family="'JetBrains Mono', monospace" letter-spacing="0.06em">DOMAIN CONTROLLER</text>
+    </svg>

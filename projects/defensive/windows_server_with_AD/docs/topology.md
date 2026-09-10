@@ -1,25 +1,8 @@
 # Topology
 
-```mermaid
-flowchart LR
-    subgraph WAN["WAN (home router)"]
-      INET[Internet]
-    end
+![Active Directory lab topology: a pfSense gateway fronts a single flat LAN holding the DC01 domain controller and the domain-joined WKSTN01 workstation, which authenticates against DC01 over Kerberos, LDAP and SMB.](diagrams/ad-topology.svg)
 
-    subgraph pfSense["pfSense 10.10.10.1"]
-      FW[(Firewall / DHCP / DNS forwarder)]
-    end
-
-    subgraph LAN["LAN 10.10.10.0/24"]
-      DC[DC01<br/>10.10.10.10<br/>homelab.local]
-      WS[WKSTN01<br/>10.10.10.20<br/>domain-joined]
-    end
-
-    INET --- pfSense
-    pfSense --- DC
-    pfSense --- WS
-    WS -- Kerberos/LDAP/SMB --> DC
-```
+<sub>Source: [`diagrams/ad-topology.html`](diagrams/ad-topology.html)</sub>
 
 ## Host roles
 
