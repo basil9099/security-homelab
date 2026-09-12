@@ -1,5 +1,11 @@
 # Security Homelab
 
+[![CI](https://github.com/basil9099/security-homelab/actions/workflows/ci.yml/badge.svg)](https://github.com/basil9099/security-homelab/actions/workflows/ci.yml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > A hands-on lab where I build and break things to learn practical cybersecurity —
 > detection engineering, Active Directory, network defense, and offensive tooling.
 

@@ -1,0 +1,111 @@
+# CI for the security-homelab monorepo.
+#
+# Three jobs, mirroring what .pre-commit-config.yaml enforces locally:
+#   lint        — ruff lint/format, YAML and whitespace hygiene, and the local
+#                 pfSense redaction guards, via pre-commit on every tracked file.
+#   secret-scan — gitleaks over the *full git history*, not just the working
+#                 tree. The pre-commit gitleaks hook only sees staged changes,
+#                 so it is skipped in the lint job and covered properly here.
+#   test        — each project's pytest suite, from inside that project (their
+#                 conftest.py puts the project root on sys.path, and modules
+#                 across projects share names, so they cannot be collected
+#                 together).
+#
+# Third-party actions are deliberately limited to the two first-party GitHub
+# ones; pre-commit and gitleaks are installed directly and version-pinned.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in step with the gitleaks rev in .pre-commit-config.yaml.
+  GITLEAKS_VERSION: "8.30.1"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: .pre-commit-config.yaml
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Cache pre-commit hook environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run hooks on all files
+        # gitleaks is skipped here: its pre-commit hook scans staged changes,
+        # which is empty in CI. The secret-scan job scans the whole history.
+        env:
+          SKIP: gitleaks
+        run: pre-commit run --all-files --show-diff-on-failure --color=always
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: a secret removed in a later commit is still a secret.
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        run: |
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+
+      - name: Scan git history
+        run: gitleaks git --redact --no-banner --verbose .
+
+  test:
+    name: Test ${{ matrix.project }} (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+        project:
+          - projects/defensive/pfsense_firewall
+          - projects/offensive/honeypot
+          - projects/offensive/network-vulnerability-scanner
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: ${{ matrix.project }}/requirements-dev.txt
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.project }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run tests
+        working-directory: ${{ matrix.project }}
+        run: python -m pytest
