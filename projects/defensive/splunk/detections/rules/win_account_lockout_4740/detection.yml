@@ -1,0 +1,68 @@
+---
+id: win_account_lockout_4740
+title: Password spraying — multiple distinct accounts locked from one source
+status: validated-offline
+version: 2
+author: Angus Dawson
+date: "2026-09-12"
+description: >
+  Detects password spraying by counting distinct accounts locked out
+  (EventCode 4740) per calling computer within an hour. In 4740 events the
+  XML field TargetDomainName holds the caller computer's name, not a domain,
+  despite what its name suggests, so that is the field this rule groups by.
+  Deliberately not an alert on any single lockout, which in a domain with
+  lockout_threshold 5 is routine user error. Breadth across accounts is the
+  spraying signal; depth against one account is the brute-force signal that
+  win_bruteforce_smb_4625 covers.
+attack:
+  - tactic: credential-access
+    technique: T1110.003
+    name: Password Spraying
+data_source:
+  log: Windows Security
+  event_codes: [4740]
+  audit_subcategory: User Account Management
+  required_fields:
+    - EventCode
+    - TargetUserName
+    - TargetDomainName
+  prerequisites:
+    - >
+      Event 4740 is logged under the Audit User Account Management
+      subcategory (Success). The lab's audit GPO
+      (projects/defensive/windows_server_with_AD/ansible/vars/gpos.yml) does
+      not configure that subcategory, so whether 4740 is logged in the lab
+      depends on the domain controller's default audit policy, which was not
+      verified. The Account Lockout subcategory the GPO does enable generates
+      event 4625, not 4740. Closing the gap needs User Account Management
+      (Success) added to the GPO's advanced_audit_policy list.
+logic:
+  window: 1h
+  threshold: 3
+  rationale: >
+    One or two lockouts in an hour is ordinary in any domain with a lockout
+    policy — users mistype passwords after password changes and on returning
+    from leave. Three distinct accounts locked from the same caller inside an
+    hour is a shape user error does not produce, because unrelated users do not
+    share a source host. The threshold counts distinct accounts, not lockout
+    events, so one account locking repeatedly cannot reach it. A spray paced
+    to stay under the lockout threshold never locks an account, so this rule
+    catches only sprays that trip lockouts and is not a general spraying
+    detector.
+false_positives:
+  - scenario: A terminal server or jump host where many users authenticate.
+    guidance: >
+      TargetDomainName will be that host for legitimate lockouts too.
+      Exclude the specific host and, if possible, lower the threshold for it
+      rather than removing the detection.
+  - scenario: A shared service account stored on several machines after a password rotation.
+    guidance: >
+      Check whether the locked accounts are distinct humans or one identity.
+      Distinct humans is the spraying case; one identity is a rotation fault.
+response: >
+  Determine whether TargetDomainName is a host where multiple users
+  legitimately authenticate. If not, treat it as a compromised or attacker
+  controlled host and check for any 4624 success from it during the same window.
+references:
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4740
+  - https://attack.mitre.org/techniques/T1110/003/

@@ -30,6 +30,12 @@ select = ["E4", "E7", "E9", "F", "I", "UP", "B"]
 # within a project (`cd projects/<area>/<project> && pytest`). This block only
 # sets shared defaults; it does not collect tests across projects (their many
 # identically named modules — main.py, config.py, models.py — would collide).
-addopts = "-ra"
+# `-m "not docker"` keeps the default run fast and Docker-free. The behaviour
+# tests that pull a multi-GB Splunk image are opt-in via `pytest -m docker`,
+# and run in their own CI job.
+addopts = "-ra -m 'not docker'"
+markers = [
+    "docker: test requires Docker and pulls the Splunk container image",
+]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]

@@ -1,0 +1,7 @@
+index=wineventlog (source="XmlWinEventLog:Security" OR sourcetype="XmlWinEventLog:Security") EventCode=4625 LogonType=3
+| bucket _time span=15m
+| stats count AS failure_count,
+        dc(TargetUserName) AS distinct_accounts,
+        values(TargetUserName) AS targeted_accounts
+        BY _time, IpAddress
+| where failure_count >= 5

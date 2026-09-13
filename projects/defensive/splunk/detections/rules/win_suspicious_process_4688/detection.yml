@@ -1,0 +1,66 @@
+---
+id: win_suspicious_process_4688
+title: Suspicious PowerShell invocation — encoded, hidden, or download cradle
+status: validated-offline
+version: 2
+author: Angus Dawson
+date: "2026-09-12"
+description: >
+  Detects PowerShell started with the flags and cradles associated with
+  execution of attacker-supplied code: encoded commands, a hidden window, and
+  in-memory download-and-execute patterns. Matches on the recorded command
+  line of EventCode 4688 process creation events.
+attack:
+  - tactic: execution
+    technique: T1059.001
+    name: PowerShell
+data_source:
+  log: Windows Security
+  event_codes: [4688]
+  audit_subcategory: Process Creation
+  required_fields:
+    - EventCode
+    - NewProcessName
+    - CommandLine
+    - Computer
+    - SubjectUserName
+    - ParentProcessName
+  prerequisites:
+    - >
+      Requires ProcessCreationIncludeCmdLine_Enabled=1. Without it, 4688 is
+      logged but CommandLine is empty and this detection returns
+      nothing. The lab's audit GPO
+      (projects/defensive/windows_server_with_AD/ansible/vars/gpos.yml) enables
+      the Process Creation subcategory but does NOT set this value, so this
+      detection would not fire in the lab as currently configured. Closing the
+      gap needs this registry setting under the Homelab - Audit Policy GPO -
+      path HKLM:\Software\Policies\Microsoft\Windows\System, name
+      ProcessCreationIncludeCmdLine_Enabled, type dword, value 1.
+logic:
+  window: 0m
+  threshold: 1
+  rationale: >
+    Unlike the other rules here this one is not a threshold detection: a single
+    encoded or hidden-window PowerShell invocation is worth an analyst's
+    attention, so the threshold is one event and the window is the scheduled
+    dispatch range rather than a bucket. Counting would only delay the alert
+    without reducing false positives, because the selectivity comes from the
+    command-line patterns rather than from volume.
+false_positives:
+  - scenario: Software deployment or management tooling that legitimately uses -EncodedCommand.
+    guidance: >
+      Check ParentProcessName. Deployment agents have a consistent parent
+      process; exclude on that parent rather than on the encoded-command flag,
+      which is the part carrying the signal.
+  - scenario: An administrator's own automation using -WindowStyle Hidden.
+    guidance: >
+      Confirm with the account owner and exclude the specific script path if
+      the command line contains one.
+response: >
+  Decode any base64 payload in CommandLine before judging it, then
+  establish whether ParentProcessName is a plausible parent for PowerShell.
+  Office applications and browsers spawning PowerShell are the strongest
+  indicator that the invocation is not administrative.
+references:
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4688
+  - https://attack.mitre.org/techniques/T1059/001/

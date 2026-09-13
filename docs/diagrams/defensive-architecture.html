@@ -44,7 +44,7 @@
 
     <svg viewBox="0 0 960 384" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="defensive-architecture-title defensive-architecture-desc">
       <title id="defensive-architecture-title">Defensive Lab Architecture</title>
-      <desc id="defensive-architecture-desc">Simulated adversary tooling feeds perimeter and endpoint sensors, which forward telemetry to Splunk; only the Windows Server Sysmon feed is implemented today, the other three flows are illustrative.</desc>
+      <desc id="defensive-architecture-desc">Simulated adversary tooling feeds perimeter and endpoint sensors, which forward telemetry to Splunk; only the Windows Security event log feed is implemented today, the other three flows are illustrative.</desc>
       <defs>
         <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#8792a3"/></marker>
         <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#3ddc84"/></marker>
@@ -76,7 +76,7 @@
 
       <path d="M 572,200 H 620 Q 628,200 628,192 V 180 Q 628,172 636,172 H 684" fill="none" stroke="#3ddc84" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
       <rect x="638" y="180" width="40" height="12" rx="2" fill="#1c2128"/>
-      <text x="658" y="189" fill="#3ddc84" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">SYSMON</text>
+      <text x="658" y="189" fill="#3ddc84" font-size="8" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.06em">WINLOG</text>
 
       <path d="M 160,232 V 276 Q 160,284 168,284 H 776 Q 784,284 784,276 V 208" fill="none" stroke="#8792a3" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
       <rect x="396" y="264" width="48" height="12" rx="2" fill="#1c2128"/>
@@ -109,7 +109,7 @@
       <rect x="380" y="176" width="40" height="12" rx="2" fill="none" stroke="rgba(230,233,238,0.40)" stroke-width="0.8"/>
       <text x="400" y="185" fill="rgba(230,233,238,0.80)" font-size="7" font-family="'JetBrains Mono', monospace" text-anchor="middle" letter-spacing="0.08em">ENDPT</text>
       <text x="472" y="206" fill="#e6e9ee" font-size="12" font-weight="600" font-family="'Inter', sans-serif" text-anchor="middle">Windows Server + AD</text>
-      <text x="472" y="222" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">sysmon · security log</text>
+      <text x="472" y="222" fill="#8792a3" font-size="9" font-family="'JetBrains Mono', monospace" text-anchor="middle">4625 · 4740 · 4769 · 4688</text>
 
       <rect x="684" y="96" width="200" height="112" rx="6" fill="#1c2128"/>
       <rect x="684" y="96" width="200" height="112" rx="6" fill="rgba(61,220,132,0.10)" stroke="#3ddc84" stroke-width="1"/>

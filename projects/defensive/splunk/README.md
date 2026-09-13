@@ -12,7 +12,7 @@
 |------|------|----|
 | `WIN-SPLUNK` | Splunk Enterprise 9.x | Windows Server 2022 |
 | `WIN-DC01`   | AD DS / DNS / DHCP    | Windows Server 2022 |
-| `WIN-WS01`   | Workstation + Sysmon  | Windows 10 Pro |
+| `WIN-WS01`   | Workstation           | Windows 10 Pro |
 | `pfSense`    | Perimeter firewall    | pfSense CE 2.7 |
 
 ![Splunk landing page](screenshots/landing-page.png)
@@ -109,6 +109,10 @@ index=wineventlog EventCode=4625
 
 Full walkthrough with screenshots: [brute-force-detection-simulation/README.md](brute-force-detection-simulation/README.md).
 
+The tuned version of this detection, with a time window, a threshold derived
+from the domain lockout policy, false-positive guidance and tests, lives in
+[`detections/rules/win_bruteforce_smb_4625/`](detections/rules/win_bruteforce_smb_4625/).
+
 ---
 
 ## Summary
@@ -117,5 +121,6 @@ Full walkthrough with screenshots: [brute-force-detection-simulation/README.md](
 - Dashboards and searches confirm visibility of Windows Event Logs
 - CIM, Sysmon, and detection add-ons integrated
 - Simulated SMB brute-force detected end-to-end via EventCode 4625
+- Four detections as code in [`detections/`](detections/): each is checked by metadata tests on every push, and has behaviour tests that run its SPL against an ephemeral Splunk instance in CI
 
 Screenshots for each step are in [`screenshots/`](screenshots/).

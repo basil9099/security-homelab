@@ -1,0 +1,55 @@
+---
+id: win_bruteforce_smb_4625
+title: SMB brute-force — repeated failed network logons from a single source
+status: validated-offline
+version: 2
+author: Angus Dawson
+date: "2026-09-12"
+description: >
+  Detects password guessing against SMB by counting failed network logons
+  (EventCode 4625, LogonType 3) grouped by source address inside a fifteen
+  minute window. LogonType 3 is what SMB authentication produces, so
+  restricting to it removes interactive mistyped-password noise while keeping
+  the behaviour the walkthrough's smbclient loop generated.
+attack:
+  - tactic: credential-access
+    technique: T1110.001
+    name: Password Guessing
+data_source:
+  log: Windows Security
+  event_codes: [4625]
+  audit_subcategory: Logon
+  required_fields:
+    - EventCode
+    - LogonType
+    - TargetUserName
+    - IpAddress
+logic:
+  window: 15m
+  threshold: 5
+  rationale: >
+    The domain lockout policy in
+    projects/defensive/windows_server_with_AD/ansible/vars/gpos.yml sets
+    lockout_threshold 5 and lockout_observation_window_minutes 15. Five
+    failures from one source inside fifteen minutes is therefore exactly the
+    activity the lockout policy exists to stop, so the threshold is derived
+    from the environment's own policy rather than chosen arbitrarily. If that
+    policy changes, this threshold and window change with it.
+false_positives:
+  - scenario: A service account with a stale cached credential retrying on a timer.
+    guidance: >
+      Check whether TargetUserName is a service account and whether the failures
+      are evenly spaced. Human guessing is bursty; a scheduler is metronomic.
+      Fix the stored credential rather than tuning the detection.
+  - scenario: A vulnerability scan authenticating with an expired account.
+    guidance: >
+      Correlate IpAddress against known scanner hosts. Exclude by
+      source address, never by account name.
+response: >
+  Identify whether IpAddress is expected on the network. If the
+  source is unknown, isolate it and check whether any 4624 success followed the
+  failures from the same source — a success after a run of failures is the
+  signal that guessing worked.
+references:
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625
+  - https://attack.mitre.org/techniques/T1110/001/
