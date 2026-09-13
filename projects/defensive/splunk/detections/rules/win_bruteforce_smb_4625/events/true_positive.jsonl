@@ -1,0 +1,6 @@
+{"_time": "2026-09-01T10:00:05Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "testuser", "IpAddress": "10.10.10.50", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T10:00:21Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "testuser", "IpAddress": "10.10.10.50", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T10:00:38Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "testuser", "IpAddress": "10.10.10.50", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T10:01:02Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "testuser", "IpAddress": "10.10.10.50", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T10:01:19Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "administrator", "IpAddress": "10.10.10.50", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T10:01:44Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "administrator", "IpAddress": "10.10.10.50", "Computer": "WKSTN01.homelab.local"}

@@ -1,0 +1,56 @@
+---
+id: win_kerberoasting_4769
+title: Kerberoasting — bulk RC4 service ticket requests for distinct SPNs
+status: validated-offline
+version: 2
+author: Angus Dawson
+date: "2026-09-12"
+description: >
+  Detects Kerberoasting by counting distinct service names for which one
+  principal requests RC4-encrypted service tickets (EventCode 4769,
+  TicketEncryptionType 0x17) inside ten minutes. Attackers request RC4
+  because the resulting ticket is far cheaper to crack offline than AES.
+  Machine accounts and krbtgt are excluded as ordinary Kerberos operation.
+attack:
+  - tactic: credential-access
+    technique: T1558.003
+    name: Kerberoasting
+data_source:
+  log: Windows Security
+  event_codes: [4769]
+  audit_subcategory: Kerberos Service Ticket Operations
+  required_fields:
+    - EventCode
+    - TicketEncryptionType
+    - TicketOptions
+    - Status
+    - ServiceName
+    - TargetUserName
+    - IpAddress
+logic:
+  window: 10m
+  threshold: 5
+  rationale: >
+    A single RC4 ticket request is unremarkable: legacy applications and older
+    service accounts still negotiate RC4. What distinguishes roasting is
+    breadth and speed — a tool enumerates every SPN in the domain and requests
+    a ticket for each in seconds. Five distinct service names from one
+    principal inside ten minutes is enumeration followed by bulk roasting, a
+    pattern no single legacy application produces.
+false_positives:
+  - scenario: A legacy application whose service account genuinely negotiates RC4.
+    guidance: >
+      Such an application requests tickets for one or two SPNs, not five. If it
+      does exceed the threshold, exclude that ServiceName rather than raising
+      the threshold for every principal.
+  - scenario: An authorised internal assessment running a roasting tool.
+    guidance: >
+      Confirm against the engagement schedule and the IpAddress of the
+      testing host. Record it; do not permanently exclude the tester's subnet.
+response: >
+  Identify the TargetUserName making the requests and whether IpAddress is a
+  host that principal normally uses. Treat every SPN in the services field as a
+  potentially cracked credential and rotate those service account passwords.
+references:
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4769
+  - https://attack.mitre.org/techniques/T1558/003/

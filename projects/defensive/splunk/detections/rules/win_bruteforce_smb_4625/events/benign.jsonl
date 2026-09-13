@@ -1,0 +1,9 @@
+{"_time": "2026-09-01T11:00:04Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.60", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:02:11Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.60", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:05:47Z", "EventCode": 4625, "LogonType": 3, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.60", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:10:02Z", "EventCode": 4625, "LogonType": 2, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.70", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:10:15Z", "EventCode": 4625, "LogonType": 2, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.70", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:10:31Z", "EventCode": 4625, "LogonType": 2, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.70", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:10:48Z", "EventCode": 4625, "LogonType": 2, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.70", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:11:03Z", "EventCode": 4625, "LogonType": 2, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.70", "Computer": "WKSTN01.homelab.local"}
+{"_time": "2026-09-01T11:11:22Z", "EventCode": 4625, "LogonType": 2, "TargetUserName": "jbloggs", "IpAddress": "10.10.10.70", "Computer": "WKSTN01.homelab.local"}

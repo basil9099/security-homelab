@@ -21,7 +21,7 @@ detect against.
 
 | Project | What it is | Key tech |
 |---|---|---|
-| [Splunk Detection Engineering](projects/defensive/splunk/) | Onboarding Windows/Sysmon telemetry into Splunk, verifying ingestion, and building detections — including an end-to-end SMB brute-force detection | Splunk, Sysmon, Universal Forwarder, SPL |
+| [Splunk Detection Engineering](projects/defensive/splunk/) | Onboarding Windows telemetry into Splunk, verifying ingestion, and building detections as code — four ATT&CK-mapped rules with automated tests, plus an end-to-end SMB brute-force walkthrough | Splunk, Universal Forwarder, SPL |
 | [Windows Server + Active Directory](projects/defensive/windows_server_with_AD/) | An AD domain built from scratch with infrastructure-as-code | Packer, Vagrant, Ansible |
 | [pfSense Firewall](projects/defensive/pfsense_firewall/) | Network segmentation, firewall rules, and IDS managed as code, with a sanitized config as source of truth | pfSense, Ansible, Suricata |
 
@@ -40,7 +40,7 @@ against a [GOAD-Light](https://github.com/Orange-Cyberdefense/GOAD) deployment �
 generate realistic activity, which flows through the network and endpoint sensors
 into Splunk for detection.
 
-![Layered defensive architecture: simulated adversary tooling feeds perimeter and endpoint sensors, which forward telemetry to Splunk. Only the Windows Server Sysmon feed is implemented today; the other three flows are illustrative.](docs/diagrams/defensive-architecture.svg)
+![Layered defensive architecture: simulated adversary tooling feeds perimeter and endpoint sensors, which forward telemetry to Splunk. Only the Windows Security event log feed is implemented today; the other flows are illustrative.](docs/diagrams/defensive-architecture.svg)
 
 - [Defensive architecture](docs/defensive-architecture.md) — how the pieces connect
 - [Network topology](projects/defensive/pfsense_firewall/docs/topology.md) — the physical VM/network layout

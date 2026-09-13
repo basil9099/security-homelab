@@ -1,0 +1,5 @@
+index=wineventlog (source="XmlWinEventLog:Security" OR sourcetype="XmlWinEventLog:Security") EventCode=4688 (NewProcessName="*\\powershell.exe" OR NewProcessName="*\\pwsh.exe")
+| where match(CommandLine, "(?i)\s-e(nc|ncoded|ncodedcommand)?\s")
+     OR match(CommandLine, "(?i)-w(indowstyle)?\s+hidden")
+     OR match(CommandLine, "(?i)(FromBase64String|IEX|Invoke-Expression|DownloadString)")
+| table _time, Computer, SubjectUserName, ParentProcessName, NewProcessName, CommandLine

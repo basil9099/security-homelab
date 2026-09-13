@@ -91,6 +91,7 @@ jobs:
           - projects/defensive/pfsense_firewall
           - projects/offensive/honeypot
           - projects/offensive/network-vulnerability-scanner
+          - projects/defensive/splunk/detections
     steps:
       - uses: actions/checkout@v4
 

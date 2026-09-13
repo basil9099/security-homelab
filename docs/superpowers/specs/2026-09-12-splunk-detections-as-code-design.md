@@ -359,3 +359,34 @@ overstates, and leaving it while adding rigour elsewhere would be inconsistent.
 - Every detection is `validated-offline`, and the README explains what that
   does and does not mean.
 - No claim in the repo asserts telemetry that is not deployed.
+
+## Errata (final review, 2026-09-13)
+
+- §1 and §11 (field naming): §1's claim that `src_ip` is a CIM-normalised field and
+  `Source_Network_Address` the raw one holds only for the classic `WinEventLog:Security`
+  sourcetype. On `XmlWinEventLog:Security`, the Splunk Add-on for Windows yields `src_ip`
+  and not `Source_Network_Address`. §11's claim that required fields "are derived from
+  Microsoft's documented 4625/4740/4769/4688 schemas" is wrong: the rules use classic
+  rendered-message field names, not the names the XML sourcetype produces. Resolved 2026-09-13;
+  see the third bullet.
+- §6.1 and §7 (windowing): the dispatch-window overlap does not compensate for
+  tumbling-window straddling. Bucket boundaries are clock-aligned, so a burst that straddles
+  one splits on every run. Straddling is an accepted limit. The overlap makes the just-closed
+  bucket whole only for `win_account_lockout_4740`, whose schedule is offset from its bucket
+  boundary; for the rules that run on their boundaries it re-reads a slice of the previous
+  bucket. Corrected in `detections/README.md`.
+- §1 and §11 (field naming), final-review finding C1: resolved 2026-09-13, after the repo owner
+  confirmed the lab forwarded XML-rendered Security events. The rules now read raw XML
+  `Data Name` fields (for example `TargetUserName`, `IpAddress`, `ServiceName`,
+  `NewProcessName`) and select events with
+  `(source="XmlWinEventLog:Security" OR sourcetype="XmlWinEventLog:Security")`. That filter
+  matches XML Security events under both Splunk Add-on for Windows naming schemes: it keys on
+  `source` from add-on 5.0.0 onward and on `sourcetype` in 4.8.4 and earlier, so the add-on
+  version the lab ran does not need to be known. Field names and filter values were checked
+  against Microsoft's event documentation and Splunk's field reference and upgrade documentation
+  rather than against live data. Every rule's `version` is now 2. Documented in
+  `detections/README.md`.
+- §6 (audit subcategory): §6's table maps `win_account_lockout_4740` to Account Lockout, but
+  Microsoft logs 4740 under Audit User Account Management, which the lab's audit GPO does not
+  enable (the Account Lockout subcategory generates 4625 only). This is recorded as a
+  prerequisite in the rule and in `detections/README.md`.

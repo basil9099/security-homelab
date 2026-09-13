@@ -29,6 +29,8 @@ Thumbs.db
 
 # Honeypot runtime artifacts
 *.jsonl
+# Detection-rule fixtures are source, not runtime output: re-include them.
+!projects/defensive/splunk/detections/rules/*/events/*.jsonl
 .ssh_host_key
 
 # Ansible secrets and fetched collections

@@ -1,0 +1,6 @@
+index=wineventlog (source="XmlWinEventLog:Security" OR sourcetype="XmlWinEventLog:Security") EventCode=4740
+| bucket _time span=1h
+| stats dc(TargetUserName) AS accounts_locked,
+        values(TargetUserName) AS locked_accounts
+        BY _time, TargetDomainName
+| where accounts_locked >= 3
