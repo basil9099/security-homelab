@@ -1,6 +1,7 @@
 # Security Homelab
 
 [![CI](https://github.com/basil9099/security-homelab/actions/workflows/ci.yml/badge.svg)](https://github.com/basil9099/security-homelab/actions/workflows/ci.yml)
+[![Detection behaviour tests](https://github.com/basil9099/security-homelab/actions/workflows/detections.yml/badge.svg)](https://github.com/basil9099/security-homelab/actions/workflows/detections.yml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)

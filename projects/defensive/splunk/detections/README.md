@@ -101,21 +101,19 @@ pytest -m docker    # Layer A — the 8 behaviour tests; needs Docker
 ## 4. What `validated-offline` means
 
 Every rule's `status` is `validated-offline`: its logic is checked by tests,
-but it has never seen live lab data. Concretely, the design is that
-`test_behaviour.py` (Layer A) provisions a throwaway Splunk container in CI,
-loads a rule's fixture events into it, and runs that rule's real SPL against
-them — an execution, not an eyeball review of the query text. That container
-is never connected to, and never receives a single event from, the lab
-described elsewhere in this repo.
+but it has never seen live lab data. `test_behaviour.py` (Layer A) provisions
+a throwaway Splunk container in CI, loads a rule's fixture events into it, and
+runs that rule's real SPL against them — an execution, not an eyeball review
+of the query text. That container is never connected to, and never receives a
+single event from, the lab described elsewhere in this repo.
 
-**As of this branch, the behaviour tests have not executed against Splunk.**
-Docker was not available in the environment where they were written. Their
-first run will be the `Detection behaviour tests` workflow
-(`.github/workflows/detections.yml`) in CI. Until that runs, `validated-offline`
-describes a test that is written and ready to execute, not one that has
-produced a result. The metadata tests (38, section 3) are unaffected by this —
-they need no Docker and no Splunk, and run in `ci.yml` on every push to `main`
-and every pull request.
+The behaviour tests run in the `Detection behaviour tests` workflow
+(`.github/workflows/detections.yml`). They were written without Docker
+available locally, so that workflow was their first execution: they first ran,
+and passed, on the pull request that added them. The workflow badge in the
+repository README shows the latest result. The metadata tests (38, section 3)
+need no Docker and no Splunk, and run in `ci.yml` on every push to `main` and
+every pull request.
 
 No rule here is `status: validated-in-lab`, and none can be: the lab that
 would generate live data for it is torn down. `validated-in-lab` remains a
