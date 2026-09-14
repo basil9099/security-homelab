@@ -2,6 +2,10 @@
 
 A modular, multi-protocol honeypot system designed for cybersecurity home labs. Emulates SSH, HTTP, FTP, and Telnet services to capture attacker behavior, credentials, and command sequences.
 
+![Live terminal dashboard in demo mode: simulated SSH, HTTP, FTP and Telnet traffic fills the event feed, top attackers and top usernames panels, with passwords masked](docs/demo.gif)
+
+<sub>`python main.py --demo --dashboard`. Simulated traffic only: source addresses are reserved documentation-range or private lab addresses, and passwords are masked on screen.</sub>
+
 ---
 
 ## Architecture
